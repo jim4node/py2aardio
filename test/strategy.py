@@ -77,9 +77,7 @@ class Strategy(object):
 
         self._init = scope.get('init', None)
         self._handle_bar = scope.get('handle_bar', None)
-        self._handle_tick = scope.get('handle_tick', None)
-        self._open_auction = scope.get("open_auction", None)
-        func_before_trading = scope.get('before_trading', None)
+
         if func_before_trading is not None and func_before_trading.__code__.co_argcount > 1:
             self._before_trading = lambda context: func_before_trading(context, None)
             user_system_log.warn(_(u"deprecated parameter[bar_dict] in before_trading function."))
@@ -87,14 +85,6 @@ class Strategy(object):
             self._before_trading = func_before_trading
         self._after_trading = scope.get('after_trading', None)
 
-        if True and self._before_trading is not None:
-            event_bus.add_listener(EVENT.BEFORE_TRADING, self.before_trading)
-        if False or self._handle_bar is not None:
-            event_bus.add_listener(EVENT.BAR, self.handle_bar)
-        if self._handle_tick is not None:
-            event_bus.add_listener(EVENT.TICK, self.handle_tick)
-        if self._after_trading is not None:
-            event_bus.add_listener(EVENT.AFTER_TRADING, self.after_trading)
         if self._open_auction is not None:
             event_bus.add_listener(EVENT.OPEN_AUCTION, self.open_auction)
 
@@ -116,37 +106,3 @@ class Strategy(object):
             with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                 self._before_trading(self._user_context)
 
-    @run_when_strategy_not_hold
-    def handle_bar(self, event):
-        bar_dict = event.bar_dict
-        with ExecutionContext(EXECUTION_PHASE.ON_BAR):
-            with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                self._handle_bar(self._user_context, bar_dict)
-
-    @run_when_strategy_not_hold
-    def open_auction(self, event):
-        bar_dict = event.bar_dict
-        with ExecutionContext(EXECUTION_PHASE.OPEN_AUCTION):
-            with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                self._open_auction(self._user_context, bar_dict)
-
-    @run_when_strategy_not_hold
-    def handle_tick(self, event):
-        tick = event.tick
-        with ExecutionContext(EXECUTION_PHASE.ON_TICK):
-            with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                self._handle_tick(self._user_context, tick)
-
-    @run_when_strategy_not_hold
-    def after_trading(self, event):
-        with ExecutionContext(EXECUTION_PHASE.AFTER_TRADING):
-            with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                self._after_trading(self._user_context)
-
-    def wrap_user_event_handler(self, handler):
-        @wraps(handler)
-        def wrapped_handler(event):
-            with ExecutionContext(EXECUTION_PHASE.GLOBAL):
-                with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                    return handler(self._user_context, event)
-        return wrapped_handler

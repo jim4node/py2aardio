@@ -239,10 +239,10 @@ class converter {
         var result = string.replace(line, pattern, `\1(\2) `);
         return result;
     }
-    // 替换 Unicode 字符串 u"str"
+    // 替换 Unicode 字符串 u"str" 和 raw字符串 r"reg"
     replaceUnicodeStr = function(line) {
-        var pattern = `u(['"])(.*?)\1`;
-        var result = string.replace(line, pattern, `\1\2\1`); 
+        var pattern = `[ur](['"])(.*?)\1`;
+        var result = string.replace(line, pattern, `\1\2\1`);
         return result;
     }
     
