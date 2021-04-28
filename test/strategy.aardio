@@ -1,0 +1,136 @@
+// -*- coding: utf-8 -*-
+//         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可。
+    // 开始
+test = 1 // jim;
+a = '#1'    #test2;
+b = "#2";
+
+import functools; var wraps = functools.wraps;
+import rqalpha.core.events; var EVENT, Event = rqalpha.core.events.EVENT, rqalpha.core.events.Event;
+import rqalpha.utils.logger; var userSystemLog = rqalpha.utils.logger.userSystemLog;
+
+//---------父类 Test-----------#
+class Test {
+    // 构造函数
+    ctor() {
+        this.a = 0;
+    // 不规范的注释缩进
+//----------------------
+        this.b = 0;
+        // -很长的语句,多行
+        if (((maxp-currentPrice)/currentPrice)*100>1 or sum(hi['volume'])<0.5*hiday['volume'] or 100*(currentPrice-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2) {
+            g.security.remove(stock);
+        }
+    }
+}
+
+
+//--------子类 ChildTest--------
+class ChildTest {
+    this = Test(...);// 继承的父类 <--请把这行移入类的构造函数 ctor 内! {
+    ctor() {
+        this.b = 1;
+    }
+}
+
+//--------孙类 ChildTest--------
+class SubChildTest {
+    this = Test(...);// 继承的父类 <--请把这行移入类的构造函数 ctor 内! {
+    ctor() {
+        this.c = 2;
+        this.d=4 // 不规范的缩进3;
+        this.e=5 // 不规则的缩进5;
+    }
+}
+
+
+/*
+# 运行策略
+# @param func
+# @return wrapper
+*/
+runWhenStrategyNotHold = function(func) {
+    // test begin {{
+    if (true) {
+        a = 1;
+    }
+    elif (false) {
+        a = 0;
+    } else {
+        a = 2;
+    }
+
+    try {
+        a = 1 + w;
+    }
+    catch (e) {
+        print(e);
+        return;
+    }
+    finally {
+        print('ok');
+    }
+    // }}test end
+
+    import rqalpha.utils.logger; var systemLog = rqalpha.utils.logger.systemLog;
+    wrapper = function(*args, **kwargs) {
+        if (not Environment.getInstance().config.extra.isHold) {
+            return func(*args, **kwargs);
+        } else {
+            systemLog.debug(_("not run {}({}, {}) because strategy is #hold#").format(func, args, kwargs));
+        }
+    }
+
+    return wrapper;
+}
+
+
+class Strategy {
+    ctor(eventBus, scope, ucontext) {
+        this._userContext = ucontext;
+        this._currentUniverse = set();
+
+        this._init = scope.get('init', None);
+        this._handleBar = scope.get('handleBar', None);
+
+        if (funcBeforeTrading != null and funcBeforeTrading.__code__.coArgcount > 1) {
+            this._beforeTrading = lambda(context) funcBeforeTrading(context, None);
+            userSystemLog.warn(_("deprecated parameter[barDict] in beforeTrading function."));
+        } else {
+            this._beforeTrading = funcBeforeTrading;
+        }
+        this._afterTrading = scope.get('afterTrading', None);
+
+        if (this._openAuction != null) {
+            eventBus.addListener(EVENT.OPEN_AUCTION, this.openAuction);
+        }
+    }
+
+    // @property;
+    userContext = function() {
+        return this._userContext;
+    }
+
+    init = function() {
+        if (this._init) {
+            with (ExecutionContext(EXECUTION_PHASE.ON_INIT)) {
+                with (ModifyExceptionFromType(EXC_TYPE.USER_EXC)) {
+                    this._init(this._userContext);
+                }
+            }
+        }
+
+        Environment.getInstance().eventBus.publishEvent(Event(EVENT.POST_USER_INIT));
+    }
+
+    // @runWhenStrategyNotHold;
+    beforeTrading = function(event) {
+        with (ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING)) {
+            with (ModifyExceptionFromType(EXC_TYPE.USER_EXC)) {
+                this._beforeTrading(this._userContext);
+
+
+            }
+        }
+    }
+}
