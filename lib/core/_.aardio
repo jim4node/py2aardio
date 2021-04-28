@@ -1,0 +1,11 @@
+﻿
+namespace core {
+    // 产生 n 个字符, 默认为空格符
+	pad = function(n, char=' ') {
+		var result = '';
+		for(i = 1; n) {
+			result = result ++ char;
+		}
+		return result;
+	}
+}
