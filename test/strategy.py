@@ -35,15 +35,37 @@ class SubChildTest(Test, ChildTest):
         self.c = 2
        self.d=4 # 不规范的缩进3
          self.e=5 # 不规则的缩进5
-       
-        
+"""
+测试写成多行的列表,元组和字典
+"""
+colors = [
+    "黑",
+    "白",
+    "红"
+]
+tup = (
+    1,
+    2,
+    3
+)
+dic = {
+    'john': 'boy',
+    'lily': 'girl'
+}
+# 函数的参数写成多行
+do_some_thing(
+    p1='a',
+    p2='b',
+    p3='c'
+)
+
 """
 # 运行策略
 # @param func
 # @return wrapper
 """
 def run_when_strategy_not_hold(func):
-    # test begin {{
+    # test begin 
     if True:
         a = 1
     elif False :
@@ -58,7 +80,7 @@ def run_when_strategy_not_hold(func):
        pass
     finally:
        print('ok')
-    # }}test end
+    # end test
     
     from rqalpha.utils.logger import system_log
     def wrapper(*args, **kwargs):
@@ -100,9 +122,4 @@ class Strategy(object):
 
         Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_INIT))
 
-    @run_when_strategy_not_hold
-    def before_trading(self, event):
-        with ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING):
-            with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
-                self._before_trading(self._user_context)
 

@@ -42,7 +42,25 @@ class SubChildTest {
         this.e=5 // 不规则的缩进5;
     }
 }
-
+/*
+测试写成多行的列表,元组和字典
+*/
+colors = {
+    "黑",
+    "白",
+    "红"};
+tup = (
+    1,
+    2,
+    3);
+dic = {
+    'john': 'boy',
+    'lily': 'girl'};
+// 函数的参数写成多行
+doSomeThing(
+    p1='a',
+    p2='b',
+    p3='c');
 
 /*
 # 运行策略
@@ -50,7 +68,7 @@ class SubChildTest {
 # @return wrapper
 */
 runWhenStrategyNotHold = function(func) {
-    // test begin {{
+    // test begin
     if (true) {
         a = 1;
     }
@@ -70,7 +88,7 @@ runWhenStrategyNotHold = function(func) {
     finally {
         print('ok');
     }
-    // }}test end
+    // end test
 
     import rqalpha.utils.logger; var systemLog = rqalpha.utils.logger.systemLog;
     wrapper = function(*args, **kwargs) {
@@ -121,16 +139,8 @@ class Strategy {
         }
 
         Environment.getInstance().eventBus.publishEvent(Event(EVENT.POST_USER_INIT));
-    }
-
-    // @runWhenStrategyNotHold;
-    beforeTrading = function(event) {
-        with (ExecutionContext(EXECUTION_PHASE.BEFORE_TRADING)) {
-            with (ModifyExceptionFromType(EXC_TYPE.USER_EXC)) {
-                this._beforeTrading(this._userContext);
 
 
-            }
-        }
+
     }
 }
