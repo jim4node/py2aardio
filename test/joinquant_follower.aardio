@@ -71,8 +71,7 @@ class JoinQuantFollower {
             try {
                 strategyId = this.extractStrategyId(strategyUrl);
                 strategyName = this.extractStrategyName(strategyUrl);
-            }
-            catch {
+            } catch(e) {
                 logger.error("抽取交易id和策略名失败, 无效的模拟交易url: %s", strategyUrl);
                 error;
             }

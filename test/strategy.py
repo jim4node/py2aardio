@@ -74,12 +74,16 @@ def run_when_strategy_not_hold(func):
         a = 2
     
     try:
-       a = 1 + w
+        a = 1 + w
     except e:
-       print(e)
-       pass
+        # 不带 as 的异常
+        print(e)
+        pass
+    except Exception as e:
+        # 带 as 的异常
+        print('Exception error')
     finally:
-       print('ok')
+        print('ok')
     # end test
     
     from rqalpha.utils.logger import system_log
@@ -91,6 +95,20 @@ def run_when_strategy_not_hold(func):
 
     return wrapper
 
+def fun_try():
+    try:
+        print('try--start')
+        a = 1/0
+    except:
+        print 'normal except'
+    except Exception:
+        print 'Exception'
+    except ValueError as e:
+        print('ValueError')
+    finally:
+        return 'finally'
+ 
+print(fun_try())
 
 class Strategy(object):
     def __init__(self, event_bus, scope, ucontext):
@@ -108,7 +126,10 @@ class Strategy(object):
         self._after_trading = scope.get('after_trading', None)
 
         if self._open_auction is not None:
-            event_bus.add_listener(EVENT.OPEN_AUCTION, self.open_auction)
+            event_bus.add_listener(
+                EVENT.OPEN_AUCTION, 
+                self.open_auction
+            )
 
     @property
     def user_context(self):
@@ -120,6 +141,8 @@ class Strategy(object):
                 with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                     self._init(self._user_context)
 
-        Environment.get_instance().event_bus.publish_event(Event(EVENT.POST_USER_INIT))
+        Environment.get_instance().event_bus.publish_event(
+            Event(EVENT.POST_USER_INIT)
+        )
 
 

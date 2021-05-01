@@ -112,8 +112,7 @@ invokeTesseractToRecognize = function(img) {
 
     try {
         res = pytesseract.imageToString(img);
-    }
-    catch (FileNotFoundError) {
+    } catch(FileNotFoundError) {
         error Exception(
             "tesseract 未安装，请至 https://github.com/tesseract-ocr/tesseract/wiki 查看安装教程"
        );

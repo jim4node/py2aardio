@@ -46,6 +46,15 @@ var convertSingleFile = function(filename, cfg) {
    			var result, err = cvter.go(tag);
    			if(result) {
    				mainForm.edtTarget.text = result;
+   				var targetName = filename;
+   				var p = ..string.lastIndexAny(targetName, ".");	//将文件扩展名 ".py" 转换成 ".aardio"
+				if(p) {
+					targetName = ..string.left(targetName, p-1);	//最后的点号会被去除
+				}
+				var fullpath2 = targetName + ".aardio";
+				//console.debug('fullpath='++fullpath2);
+   				var res = string.save(fullpath2, result);
+   				thread.command.send('addTargetItem', 'file', fullpath2);
    			} else {
    				mainForm.edtTarget.text = '转换错误:\n' ++ err;
    			}
@@ -62,17 +71,16 @@ var convertFn = function(dir, filename, fullpath, cfg) {
 		var src = string.load( fullpath );
 		if(#src) {
    			var cvter = core.converter(src, cfg);
-   			var code, err = cvter.go(filename);
-   			if(code) {
-   				var targetName = filename;
+   			var result, err = cvter.go(filename);
+   			if(result) {
+   				var targetName = fullpath;
    				var p = ..string.lastIndexAny(targetName, ".");	//将文件扩展名 ".py" 转换成 ".aardio"
 				if(p) {
-					targetName = ..string.left(targetName, p) + "aardio";	//点号"."已包含
-				} else {
-					targetName = targetName + ".aardio";
+					targetName = ..string.left(targetName, p-1);	//最后的点号会被去除
 				}
-   				var fullpath2 = dir + targetName;
-   				var result = string.save(fullpath2, code);
+				var fullpath2 = targetName + ".aardio";
+				//console.debug('fullpath='++fullpath2);
+   				var res = string.save(fullpath2, result);
    				thread.command.send('addTargetItem', 'file', fullpath2);
    			} else {
    				console.log("conversion error:" ++ err ++ ",file="++fullpath);
@@ -120,7 +128,6 @@ mainForm.btnStart.oncommand = function(id,event){
 	if(mainForm.browseType == 'file') {
 		thread.command.send('addSourceItem', 'file', path);
 		convertSingleFile(path, cfg);
-		thread.command.send('addTargetItem', 'file', path);
 	} elseif(mainForm.browseType == 'dir') {
 		var count = 0;
 		//批量处理文件
@@ -162,6 +169,6 @@ mainForm.edtSource.wndproc = function(hwnd,message,wParam,lParam){
 	}
 	//无返回值则继续调用默认回调函数
 }
-
+//TODO: 点击左右列表框, 切换显示相应的源代码
 mainForm.show();
 return win.loopMessage();

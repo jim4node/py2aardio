@@ -49,7 +49,6 @@ class converter {
         	result = string.replace(result, ptn, function($1, $2, $3) {
             	//把多行注释内的回车换行(\x0D\x0A)替换为其它特殊字符: \x0a => \x1a
             	var str = $1 ++ string.replace($2, `\n`, '\x1a') ++ $3;
-            	console.debug(str);
             	return str;
         	});
         }//for
@@ -144,8 +143,8 @@ class converter {
 			// 处理单行注释
         	var newLine = this.replaceSingleLineComment(line);	// '#' => '//'
         	emptyLine = this.isEmptyLine(newLine);
-        	newLine = this.encodeStrLiterals(newLine, true);		// 加密语句中的字符串, 使之不参与语法分析
-        	
+        	newLine = this.encodeStrLiterals(newLine, true);	// 加密语句中的字符串, 使其中文本无法参与语法分析
+        	/***故下面所有的行内内容处理时, 不用担心会匹配到字符串内可能存在的 python 关键字***/
         	if(!emptyLine) {        		
         		// 处理列表的声明性语句 '= [...]' (不包括其它[])
         		newLine = this.replaceList(newLine);
@@ -157,9 +156,11 @@ class converter {
         		newLine = this.replaceClass(newLine);
         		// 处理 lambda 表达式
         		newLine = this.replaceLambda(newLine);
-        		// 处理 self 之类的其它保留字
+        		// 处理 except 和 finally 子句
+        		newLine = this.replaceExceptFinally(newLine, i);
+        		// 处理 转换 self->this, except->catch 之类的其它保留字
         		newLine = this.replaceReservedWords(newLine);
-        		// 处理 Unicode 字符串格式 u"..."
+        		// 处理 Unicode 字符串格式 u"..." 和 raw string r"..."
         		newLine = this.replaceUnicodeStr(newLine);
         		// 处理 字符串格式化 '...' % (...)
         		newLine = this.replaceStrFormat(newLine);
@@ -196,21 +197,61 @@ class converter {
     // 处理列表声明 '[...]'
     replaceList = function(line) {
         var pattern = `([\=])\s*\[(.*?)\]`;
-        var result = string.replace(line, pattern, `\1 {\2}`); 
+        var result = string.replace(line, pattern, `\1 {\2}`);  //若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
+        return result;
+    }
+    
+    // 处理 except 和 finally 子句
+    replaceExceptFinally = function(line, i) {
+        /**行内的字符串文本已经预先加密, 不用担心会在字符串中匹配到关键字的情况**/
+        var pattern = `^( *)(<except>|<finally>)\s*([\(\)\w\s]*?)\s*(\:)`;
+        var found = false
+        var result = string.replace(line, pattern, function($1, $2, $3, $4) {
+            //owner = 原始字符串
+            found = true;
+            var res = $2;	// except 或 finally
+            //console.debug('#line:'++i, ', #1: ', $1, $2, $3, $4);
+            if($2 == 'finally') {
+                res = '/*' ++ $2 ++ '*/';	// aardio 没有 finally, 故把它注释掉
+            } elseif($2 == 'except') {  // and #$3 > 0 $2 有内容,即类似"Exception as e:"
+            	//console.debug('#line:'++i++', #2: $2="'++$2++'", $3="'++$3++'"', ', $4="'++$4++'"');
+            	if(#$3 == 0) {
+            		res = $2 ++ '(e)';
+            	} else {
+                	res = $2 ++ string.replace($3, `(\w+\s+as\s+)`, `/*\1*/`); //若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
+                }
+                //console.debug('#line:'++i++', #3: res="'++res++'"');
+            }
+            res = $1 ++ res ++ $4; // 最后要把 ':' 加上,以利于后续产生左花括号'{'
+            //console.debug('#line:'++i, ', #4: res='++res);
+            return res;
+        });
+        /*// debug
+        if(found) {
+            var str = line ++ result;
+            string.save('./log/debug-line-'++i++'.tmp.txt', str);
+        }
+        */
+        
         return result;
     }
     
     // 处理 self|except 之类的保留字
     replaceReservedWords = function(line) {
-        var pattern = `!\w(<self>|<except>|<pass>|<raise>|<len>)(\W)`;
+        var pattern = `!\w(<self>|<except>|<pass>|<raise>|<len>|<None>|<True>|<False>|<is not>|<is>)(\W)`;
         var result = string.replace(line, pattern, function($1, $2) {
             //console.debug($1, $2);
             var map = {
                 ['self'] = 'this',		//key 名必须用方括号
                 ['except'] = 'catch',
-                ['pass'] = 'return',
+                ['pass'] = '// pass',	// 空语句
                 ['raise'] = 'error',
                 ['len'] = '#',
+                ['None'] = 'null',
+                ['True'] = 'true',
+                ['False'] = 'false',
+                ['is not'] = '!=',		// 注:实际上 python 的 is/is not 与 ==/!= 含义有所不同: is 比较引用相等, 而 == 比较值相等;
+                ['is'] = '=='			// 但是 aardio 没有对应的操作符, 故暂且用 ==/!=
             };
             
             var $1m = map[$1];
@@ -220,7 +261,7 @@ class converter {
     }
     // 替换带有继承的类声明: class XXX(parent) 这样的
     replaceClass = function(line) {
-        var pattern = `!\w(class)\s+([a-zA-Z\d\$\_]+)\s*\(([a-zA-Z\s\d\$\*\,\_]+)\)`; //类的声明
+        var pattern = `!\w(class)\s+([\w\$]+)\s*\(([\w\$\*\, ]+)\)`; //类的声明
         var result = string.replace(line, pattern, function($1, $2, $3) {
             //console.debug($1, $2, $3);
             var res = $1 ++ ' ' ++ $2;
@@ -239,20 +280,20 @@ class converter {
     }
     // 替换修饰符 @decorator , 注释掉
     replaceDecorator = function(line) {
-        var pattern = `^(\s+)(\@[^\s]+)`;
-        var result = string.replace(line, pattern, `\1\/\/ \2`); 
+        var pattern = `^(\s+)(\@\w+)`;
+        var result = string.replace(line, pattern, `\1\/\/ \2`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
     // 替换 lambda 表达式
     replaceLambda = function(line) {
         var pattern = `([^\a]lambda)\s*([^\r\n\:]*)\s*\:\s*`;
-        var result = string.replace(line, pattern, `\1(\2) `);
+        var result = string.replace(line, pattern, `\1(\2) `);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
     // 替换 Unicode 字符串 u"str" 和 raw字符串 r"reg"
     replaceUnicodeStr = function(line) {
         var pattern = `[ur](['"])(.*?)\1`;
-        var result = string.replace(line, pattern, `\1\2\1`);
+        var result = string.replace(line, pattern, `\1\2\1`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
     
@@ -288,9 +329,9 @@ class converter {
         var dir;			// 缩进的类型/方向: null=不缩进, increase-缩进, decrease-回缩
         var newIndent = prevIndent;	// 缩进的空格数目
         var level = 0; 		//表示缩进的级数, 4格为一级, 一般用在回缩时
-        var brackets;		//补充内容(需补足的文本内容text 和 插入位置行号pos)
-        var pattern = `^(\s*)`;	//TODO: 是否仅限空格?
-        var spaces = string.match(line, pattern);	//左侧的空格数       
+        var brackets;		//需补充的花括号
+        var pattern = `^( *)`;	//仅限空格
+        var spaces = string.match(line, pattern);	//左侧的空格数
         newIndent = #spaces;	//缩进的空格数目
         //处理缩进空格不对齐的情况: 少1个的补齐1个, 多1个的去除1个
         var  mod = newIndent %  $_config.indentSpaces; //除余取模: 余数为1-多1个, 2-多2个, 3-少1个
@@ -298,11 +339,11 @@ class converter {
         	//console.log('[WARNING]line#'++i++' Error Indent Spaces: '++newIndent++', mod='++mod++', src code="'++line++'"');
         	newIndent -= 1;
         	line = string.slice(line, 2); //删去1格, 即:截取从第2个开始到结尾的字符串
-        }elseif(mod == 3){//少1格, 补齐
+        }elseif(mod == 3){	//少1格, 补齐
         	//console.log('[WARNING]line#'++i++' Error Indent Spaces:'++newIndent++', mod='++mod++', src code="'++line++'"');
         	newIndent += 1;
-        	line = ' ' ++ line; // 补足1格
-        }elseif(mod == 2){//TODO:多2格或少2格, 不知如何处理?
+        	line = ' ' ++ line;
+        }elseif(mod == 2){	//TODO:多2格或少2格, 不知如何处理?
         	//console.log('[ERROR]line#'++i++' Error Indent Spaces:'++newIndent++', mod='++mod++', src code="'++line++'"');
         }
         
@@ -339,55 +380,38 @@ class converter {
         src = this.replaceFromImports(src);
         // 处理函数
         src = this.replaceFunctions(src);
-        // 处理冒号
+        // 处理冒号的行
         src = this.replaceColons(src);
-        // 处理 else 前的回车换行
+        // 处理 else/catch 前的回车换行
         src = this.replaceElses(src);
         // 处理多行注释
         src = this.replaceMultiLineComments(src);
-        // 恢复多行的回车换行符
-        src = this.restoreMultilineText(src);
-        result = src;
+        // 恢复多行的回车换行符(这个必须放在最后面)
+        result = this.restoreMultilineText(src);
         return result;
     }
     
-    // 处理以冒号结尾的 "if|for|while ... :" 语句体加括号
+    // 处理以冒号结尾的 "if|for|while ... :" 的语句, 为语句体加上括号()
     replaceColonStmt = function(line) {
         var pattern = `!\w(<if>|<with>|<elif>|<while>|<for>|<except>)\s+(.+?)\s*[\:]`;	//此时还没处理掉冒号
-        var result = string.replace(line, pattern, `\1 (\2) :`);
-        pattern = `!\w(<is not>|<is>)\s+None`;    // is not None
-        result = string.replace(result, pattern, function($1) {
-            var map = {
-        		['is not'] = '!=',
-        		['is'] = '=='
-        	};
-        	$1m = map[$1] : $1;
-        	//if(!$2m) console.debug('[DEBUG]replaceColonStmt:error: NULL map of $2("'++$2++'")');
-        	return $1m ++ ' null';
-        });
-        pattern = `([\=\>\<\!])\s*(None)(\W?)`;   // = None
-        result = string.replace(result, pattern, `\1 null\3`);
-        pattern = `([^\a])(<True>|<False>)([^\a]?)`;
-        result = string.replace(result, pattern, function($1, $2, $3) {
-            return $1 ++ string.lower($2) ++ $3;
-        });
+        var result = string.replace(line, pattern, `\1 (\2) :`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
-    // 处理} else {的情况
+    // 处理 else/catch 前置换行(即: }\r\nelse )的情况
     replaceElses = function(src) {
-        var pattern = `\}\s+(else)`;
-        var result = string.replace(src, pattern, `} \1`);
+        var pattern = `\}\s*(<else>|<catch>)`; //把包含回车换行的连续多个空白符, 都替换成一个空格
+        var result = string.replace(src, pattern, `} \1`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
     
     // 处理冒号+换行+{的情况
     replaceColons = function(src) {
-        var pattern = `\s*\:\s+\{`;
+        var pattern = `\s*\:\s*\{`;
         var result = string.replace(src, pattern, ` {`);
         return result;
     }
 
-    // 产生末尾可能存在的缩进回缩
+    // 产生 python 源文件末尾可能存在的缩进回缩
     eofIndents = function(indent) {
         // 每4空格缩进一级
         var result = {};
@@ -438,7 +462,7 @@ class converter {
         var pattern = `(<'''>|<""">)([\s\S]+?)(\1)`;	//多行注释, 匹配两种引号
         var result = string.replace(src, pattern, function($1, $2, $3) {
             // 这里先不把先前临时替换的回车换行符给恢复回来, 留作后续
-        	var str = `/*` ++ $2 ++ `*/`;//string.replace($2, `\x1a`, '\n')
+        	var str = `/*` ++ $2 ++ `*/`;
         	return str;
        	}); 
         return result;
@@ -452,7 +476,7 @@ class converter {
     
     // 替换变量命名方式
     camelize = function(src) {
-        var pattern = `([a-z\d\$])_([a-z])`;
+        var pattern = `([a-z\d\$])_([a-z])`; //以下划线'_'连接的小写字母变量名
         var result = string.replace(src, pattern, function($1, $2) {
             //owner = 原始字符串
             return $1 ++ string.upper($2); // sys_log -> sysLog
@@ -461,7 +485,7 @@ class converter {
     }
     // 替换导入 from...import
     replaceFromImports = function(src) {
-        var pattern = `from\s+(.+?)\s+import\s+([^\r;\:]+)`;	// imports
+        var pattern = `from\s+(\w+?)\s+import\s+([^\r;\:]+)`;	// imports
         var result = string.replace(src, pattern, function($1, $2){
             var res = 'import ' ++ $1 ++ ';' //'import a.b;
             if($2 != '*') {
@@ -476,21 +500,20 @@ class converter {
             	}
             }
             //res = res ++ '\r\n';
-            //console.debug(res);
             return res;
         }); 
         return result;
     }
     // 替换函数
     replaceFunctions = function(src) {
-        var pattern = `!\wdef\s+([a-zA-Z\d\$\_]+)\s*\((.*?)\)\s*(\:)`;
+        var pattern = `!\wdef\s+([\w\$]+)\s*\((.*?)\)\s*(\:)`;
         var result = string.replace(src, pattern, function($1, $2, $3){
             $2 = string.trim($2);
             $2 = string.replace($2, `^(<self>|<this>)[\s\,]*`, ''); //去除 self,
             var res = $1 ++ ' = function(' ++ $2 ++ ')' ++ $3;
             res = string.replace(res, `__init__\s*=\s*function\s*`, 'ctor');	//类的构造函数
             res = string.replace(res, `__del__\s*=\s*function\s*`, 'destructor');	//类的析构函数
-            res = string.replace(res, `__str__\s*=\s*function\s*`, '_tostring');	//类的析构函数
+            res = string.replace(res, `__str__\s*=\s*function\s*`, '_tostring');	//类的 tostring
             return res;
         }); 
         return result;

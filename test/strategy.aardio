@@ -6,8 +6,8 @@ a = '#1'    #test2;
 b = "#2";
 
 import functools; var wraps = functools.wraps;
-import rqalpha.core.events; var EVENT, Event = rqalpha.core.events.EVENT, rqalpha.core.events.Event;
-import rqalpha.utils.logger; var userSystemLog = rqalpha.utils.logger.userSystemLog;
+from rqalpha.core.events import EVENT, Event;
+from rqalpha.utils.logger import userSystemLog;
 
 //---------父类 Test-----------#
 class Test {
@@ -80,17 +80,20 @@ runWhenStrategyNotHold = function(func) {
 
     try {
         a = 1 + w;
-    }
-    catch (e) {
+    } catch(e) {
+        // 不带 as 的异常
         print(e);
-        return;
+        // pass;
+    } catch(/*Exception as */e) {
+        // 带 as 的异常
+        print('Exception error');
     }
-    finally {
+    /*finally*/ {
         print('ok');
     }
     // end test
 
-    import rqalpha.utils.logger; var systemLog = rqalpha.utils.logger.systemLog;
+    from rqalpha.utils.logger import systemLog;
     wrapper = function(*args, **kwargs) {
         if (not Environment.getInstance().config.extra.isHold) {
             return func(*args, **kwargs);
@@ -102,25 +105,45 @@ runWhenStrategyNotHold = function(func) {
     return wrapper;
 }
 
+funTry = function() {
+    try {
+        print('try--start');
+        a = 1/0;
+    } catch(e) {
+        print 'normal except';
+    } catch(Exception) {
+        print 'Exception';
+    } catch(/*ValueError as */e) {
+        print('ValueError');
+    }
+    /*finally*/ {
+        return 'finally';
+    }
+}
+
+print(funTry());
 
 class Strategy {
     ctor(eventBus, scope, ucontext) {
         this._userContext = ucontext;
         this._currentUniverse = set();
 
-        this._init = scope.get('init', None);
-        this._handleBar = scope.get('handleBar', None);
+        this._init = scope.get('init', null);
+        this._handleBar = scope.get('handleBar', null);
 
         if (funcBeforeTrading != null and funcBeforeTrading.__code__.coArgcount > 1) {
-            this._beforeTrading = lambda(context) funcBeforeTrading(context, None);
+            this._beforeTrading = lambda(context) funcBeforeTrading(context, null);
             userSystemLog.warn(_("deprecated parameter[barDict] in beforeTrading function."));
         } else {
             this._beforeTrading = funcBeforeTrading;
         }
-        this._afterTrading = scope.get('afterTrading', None);
+        this._afterTrading = scope.get('afterTrading', null);
 
         if (this._openAuction != null) {
-            eventBus.addListener(EVENT.OPEN_AUCTION, this.openAuction);
+            eventBus.addListener(
+                EVENT.OPEN_AUCTION, 
+                this.openAuction
+           );
         }
     }
 
@@ -138,7 +161,9 @@ class Strategy {
             }
         }
 
-        Environment.getInstance().eventBus.publishEvent(Event(EVENT.POST_USER_INIT));
+        Environment.getInstance().eventBus.publishEvent(
+            Event(EVENT.POST_USER_INIT)
+       );
 
 
 
