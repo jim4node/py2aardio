@@ -399,14 +399,14 @@ class converter {
     }
     // 处理 else/catch 前置换行(即: }\r\nelse )的情况
     replaceElses = function(src) {
-        var pattern = `\}\s*(<else>|<catch>)`; //把包含回车换行的连续多个空白符, 都替换成一个空格
+        var pattern = `\}\s+(<else>|<catch>)`; //把包含回车换行的连续多个空白符, 都替换成一个空格
         var result = string.replace(src, pattern, `} \1`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
     
     // 处理冒号+换行+{的情况
     replaceColons = function(src) {
-        var pattern = `\s*\:\s*\{`;
+        var pattern = `\s*\:\s+\{`;
         var result = string.replace(src, pattern, ` {`);
         return result;
     }
@@ -485,7 +485,7 @@ class converter {
     }
     // 替换导入 from...import
     replaceFromImports = function(src) {
-        var pattern = `from\s+(\w+?)\s+import\s+([^\r;\:]+)`;	// imports
+        var pattern = `from\s+([\w\.]+?)\s+import\s+([^\r;\:]+)`;	// imports
         var result = string.replace(src, pattern, function($1, $2){
             var res = 'import ' ++ $1 ++ ';' //'import a.b;
             if($2 != '*') {

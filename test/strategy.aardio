@@ -6,8 +6,8 @@ a = '#1'    #test2;
 b = "#2";
 
 import functools; var wraps = functools.wraps;
-from rqalpha.core.events import EVENT, Event;
-from rqalpha.utils.logger import userSystemLog;
+import rqalpha.core.events; var EVENT, Event = rqalpha.core.events.EVENT, rqalpha.core.events.Event;
+import rqalpha.utils.logger; var userSystemLog = rqalpha.utils.logger.userSystemLog;
 
 //---------父类 Test-----------#
 class Test {
@@ -93,7 +93,7 @@ runWhenStrategyNotHold = function(func) {
     }
     // end test
 
-    from rqalpha.utils.logger import systemLog;
+    import rqalpha.utils.logger; var systemLog = rqalpha.utils.logger.systemLog;
     wrapper = function(*args, **kwargs) {
         if (not Environment.getInstance().config.extra.isHold) {
             return func(*args, **kwargs);
