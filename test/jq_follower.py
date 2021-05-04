@@ -3,9 +3,9 @@ import re
 from datetime import datetime
 from threading import Thread
 
-from easytrader import exceptions
-from easytrader.follower import BaseFollower
-from easytrader.log import logger
+from ez import exceptions
+from ez.follower import BaseFollower
+from ez.log import logger
 
 
 class JoinQuantFollower(BaseFollower):
@@ -42,7 +42,7 @@ class JoinQuantFollower(BaseFollower):
         send_interval=0,
     ):
         """跟踪joinquant对应的模拟交易，支持多用户多策略
-        :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
+        :param users: 支持ez的用户对象，支持使用 [] 指定多个用户
         :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
             地址类似 https://www.joinquant.com/algorithm/live/index?backtestId=xxx
         :param track_interval: 轮训模拟交易时间，单位为秒

@@ -65,9 +65,7 @@ inputVerifyCodeManual = function(imagePath) {
 
     image = Image.open(imagePath);
     image.show();
-    code = input(
-        string.format("image path {}, input verify code answer:", imagePath)
-   );
+    code = input(string.format("image path {}, input verify code answer:", imagePath));
     return code;
 }
 
@@ -115,7 +113,7 @@ invokeTesseractToRecognize = function(img) {
     } catch(FileNotFoundError) {
         error Exception(
             "tesseract 未安装，请至 https://github.com/tesseract-ocr/tesseract/wiki 查看安装教程"
-       );
+        );
     }
     validChars = re.findall("[0-9a-z]", res, re.IGNORECASE);
     return "".join(validChars);

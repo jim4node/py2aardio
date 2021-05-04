@@ -1,13 +1,41 @@
 // -*- coding: utf-8 -*-
 //         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可。
-    // 开始
-test = 1 // jim;
+    // 开始测试
+test = 1 //;
 a = '#1'    #test2;
 b = "#2";
+c = '汉字';
+names = {"zhao", "钱", "sun", "李"}   // 数组;
+/*
+测试写成多行的列表,元组和字典
+*/
+colors = {
+    "黑",
+    "白",
+    "纂"
+];
+//元组
+tup =(
+    1,
+    2,
+    3
+);
+//字典
+dict = {
+    'john': 'boy',
+    'lily': 'girl'
+};
+
+// 函数的参数写成多行
+doSomeThing(
+    p1='a',
+    p2='b',
+    p3='c'
+);
 
 import functools; var wraps = functools.wraps;
-import rqalpha.core.events; var EVENT, Event = rqalpha.core.events.EVENT, rqalpha.core.events.Event;
-import rqalpha.utils.logger; var userSystemLog = rqalpha.utils.logger.userSystemLog;
+import rq.core.events; var EVENT, Event = rq.core.events.EVENT, rq.core.events.Event;
+import rq.utils.logger; var userSystemLog = rq.utils.logger.userSystemLog;
 
 //---------父类 Test-----------#
 class Test {
@@ -33,7 +61,7 @@ class ChildTest {
     }
 }
 
-//--------孙类 ChildTest--------
+//--------孙类 SubChildTest, 继承自多个类--------
 class SubChildTest {
     this = Test(...);// 继承的父类 <--请把这行移入类的构造函数 ctor 内! {
     ctor() {
@@ -42,25 +70,7 @@ class SubChildTest {
         this.e=5 // 不规则的缩进5;
     }
 }
-/*
-测试写成多行的列表,元组和字典
-*/
-colors = {
-    "黑",
-    "白",
-    "红"};
-tup = (
-    1,
-    2,
-    3);
-dic = {
-    'john': 'boy',
-    'lily': 'girl'};
-// 函数的参数写成多行
-doSomeThing(
-    p1='a',
-    p2='b',
-    p3='c');
+
 
 /*
 # 运行策略
@@ -71,8 +81,7 @@ runWhenStrategyNotHold = function(func) {
     // test begin
     if (true) {
         a = 1;
-    }
-    elif (false) {
+    } elseif (false) {
         a = 0;
     } else {
         a = 2;
@@ -93,9 +102,9 @@ runWhenStrategyNotHold = function(func) {
     }
     // end test
 
-    import rqalpha.utils.logger; var systemLog = rqalpha.utils.logger.systemLog;
+    import utils.logger; var systemLog = utils.logger.systemLog;
     wrapper = function(*args, **kwargs) {
-        if (not Environment.getInstance().config.extra.isHold) {
+        if (not Environment.getInstance().config) {
             return func(*args, **kwargs);
         } else {
             systemLog.debug(_("not run {}({}, {}) because strategy is #hold#").format(func, args, kwargs));
@@ -123,17 +132,21 @@ funTry = function() {
 
 print(funTry());
 
+// 类
 class Strategy {
     ctor(eventBus, scope, ucontext) {
+        // 类的属性和方法
         this._userContext = ucontext;
         this._currentUniverse = set();
 
         this._init = scope.get('init', null);
-        this._handleBar = scope.get('handleBar', null);
+        this._handleBar = scope.get(
+            'handleBar', null
+            );
 
         if (funcBeforeTrading != null and funcBeforeTrading.__code__.coArgcount > 1) {
             this._beforeTrading = lambda(context) funcBeforeTrading(context, null);
-            userSystemLog.warn(_("deprecated parameter[barDict] in beforeTrading function."));
+            userSystemLog.warn(_(string.format("deprecated parameter[barDict] in '%s' function.", 'beforeTrading')));
         } else {
             this._beforeTrading = funcBeforeTrading;
         }
@@ -143,7 +156,7 @@ class Strategy {
             eventBus.addListener(
                 EVENT.OPEN_AUCTION, 
                 this.openAuction
-           );
+            );
         }
     }
 
@@ -154,16 +167,15 @@ class Strategy {
 
     init = function() {
         if (this._init) {
-            with (ExecutionContext(EXECUTION_PHASE.ON_INIT)) {
+            // with 语句, 没法转换:(with ExecutionContext(EXECUTION_PHASE.ON_INIT):
                 with (ModifyExceptionFromType(EXC_TYPE.USER_EXC)) {
                     this._init(this._userContext);
                 }
             }
         }
 
-        Environment.getInstance().eventBus.publishEvent(
-            Event(EVENT.POST_USER_INIT)
-       );
+        // 分为多行的函数参数
+        eventBus.publishEvent(Event(EVENT.POST_USER_INIT),true);
 
 
 

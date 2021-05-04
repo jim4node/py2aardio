@@ -3,18 +3,18 @@ import re;
 import datetime; var datetime = datetime.datetime;
 import threading; var Thread = threading.Thread;
 
-import easytrader; var exceptions = easytrader.exceptions;
-import easytrader.follower; var BaseFollower = easytrader.follower.BaseFollower;
-import easytrader.log; var logger = easytrader.log.logger;
+import ez; var exceptions = ez.exceptions;
+import ez.follower; var BaseFollower = ez.follower.BaseFollower;
+import ez.log; var logger = ez.log.logger;
 
 
 class JoinQuantFollower {
     this = BaseFollower(...);// 继承的父类 <--请把这行移入类的构造函数 ctor 内! {
     LOGIN_PAGE = "https://www.joinquant.com";
     LOGIN_API = "https://www.joinquant.com/user/login/doLogin?ajax=1";
-    TRANSACTION_API = (
+    TRANSACTION_API =(
         "https://www.joinquant.com/algorithm/live/transactionDetail"
-   );
+    );
     WEB_REFERER = "https://www.joinquant.com/user/login/index";
     WEB_ORIGIN = "https://www.joinquant.com";
 
@@ -23,7 +23,7 @@ class JoinQuantFollower {
             "CyLoginForm[username]": user,
             "CyLoginForm[pwd]": password,
             "ajax": 1,
-       };
+        };
         return params;
     }
 
@@ -46,7 +46,7 @@ class JoinQuantFollower {
         sendInterval=0,
 ) {
         /*跟踪joinquant对应的模拟交易，支持多用户多策略
-        :param users: 支持easytrader的用户对象，支持使用 [] 指定多个用户
+        :param users: 支持ez的用户对象，支持使用 [] 指定多个用户
         :param strategies: joinquant 的模拟交易地址，支持使用 [] 指定多个模拟交易,
             地址类似 https://www.joinquant.com/algorithm/live/index?backtestId=xxx
         :param trackInterval: 轮训模拟交易时间，单位为秒
@@ -64,7 +64,7 @@ class JoinQuantFollower {
 
         this.startTraderThread(
             users, tradeCmdExpireSeconds, entrustProp, sendInterval
-       );
+        );
 
         workers = {};
         for (strategyUrl in strategies) {
@@ -79,7 +79,7 @@ class JoinQuantFollower {
                 target=this.trackStrategyWorker,
                 args= {strategyId, strategyName},
                 kwargs={"interval": trackInterval},
-           );
+            );
             strategyWorker.start();
             workers.append(strategyWorker);
             logger.info("开始跟踪策略: %s", strategyName);
@@ -96,9 +96,7 @@ class JoinQuantFollower {
 
     extractStrategyName = function(strategyUrl) {
         rep = this.s.get(strategyUrl);
-        return this.reFind(
-            '(?<=title="点击修改策略名称"\>).*(?=\</span)', rep.content.decode("utf8")
-       );
+        return this.reFind('(?<=title="点击修改策略名称"\>).*(?=\</span)', rep.content.decode("utf8"));
     }
 
     createQueryTransactionParams = function(strategy) {
@@ -114,9 +112,7 @@ class JoinQuantFollower {
 
     // @staticmethod;
     stockShuffleToPrefix = function(stock) {
-        assert (
-            #(stock) == 11
-       ), string.format("stock {} must like 123456.XSHG or 123456.XSHE", stock);
+        assert(#(stock) == 11), string.format("stock {} must like 123456.XSHG or 123456.XSHE", stock);
         code = stock[:6];
         if (stock.find("XSHG") != -1) {
             return "sh" + code;
@@ -132,19 +128,19 @@ class JoinQuantFollower {
         for (transaction in transactions) {
             transaction["amount"] = this.reFind(
                 "\d+", transaction["amount"], dtype=int
-           );
+            );
 
             timeStr = string.format("{} {}", transaction["date"], transaction["time"]);
             transaction["datetime"] = datetime.strptime(
                 timeStr, "%Y-%m-%d %H:%M"
-           );
+            );
 
             stock = this.reFind("\d{6}\.\w{4}", transaction["stock"]);
             transaction["stockCode"] = this.stockShuffleToPrefix(stock);
 
-            transaction["action"] = (
+            transaction["action"] =(
                 "buy" if transaction["transaction"] == "买" else "sell"
-           )
+            )
 
         }
     }
