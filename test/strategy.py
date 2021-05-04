@@ -147,7 +147,7 @@ class Strategy(object):
 
     def init(self):
         if self._init:
-            # with 语句, 没法转换:(
+            # with 语句, 没法转换
             with ExecutionContext(EXECUTION_PHASE.ON_INIT):
                 with ModifyExceptionFromType(EXC_TYPE.USER_EXC):
                     self._init(self._user_context)
