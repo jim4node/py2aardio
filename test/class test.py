@@ -32,3 +32,6 @@ print "This is a demo class"
 """
 s = student('ken', 10, 60, 3)
 s.speak()
+
+if __name__ == "__main__":
+    print("main module")

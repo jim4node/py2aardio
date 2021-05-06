@@ -76,6 +76,42 @@ class converter {
         for(n, ptn in patterns) {
         	result = string.replace(result, ptn, `\1`);
         }
+        /*
+        3. 其它可全局性替换的关键字句(指不太可能在一个文件的多行内出现的)
+        */
+        patterns = {
+            `__name__\s*([\!\=]{2})\s*(['"])__(<main>)__\2`,	// 是否主模块判断
+        };
+        for(n, ptn in patterns) {
+        	result = string.replace(result, ptn, function($1, $2, $3){
+        		//console.debug('prepare:#3. $1="'++$1++'", $2="'++$2++'", $3="'++$3++'"');
+        		// $1, $2, $3 三个匹配映射, 有对上号的就执行
+        		var $1map = {};
+        		var fn = $1map[$1];
+        		if (fn) {
+        			//console.debug('prepare: $1map "'++$1++'" found and excuted');
+        			return fn($1, $2);
+        		}// $1map
+        		var $2map = {};
+        		fn = $2map[$2];
+        		if (fn) {
+        			//console.debug('prepare: $2map "'++$2++'" found and excuted');
+        			return fn($1, $2, $3);
+        		}// $2map
+        		var $3map = {
+        			['main'] = function($1, $2, $3) {	// python: "__name__ == __main__" => aardio: "owner == null" 
+        				return 'owner ' ++ $1 ++ ' null';
+        			};
+        		};
+        		fn = $3map[$3];
+        		if (fn) {
+        			//console.debug('prepare: $3map "'++$3++'" found and excuted');
+        			return fn($1, $2, $3);
+        		}// $3map
+        		// else: //自由条件组合
+        		//if $1 or/and $2 and/or $3 { return res; }
+        	});
+        }
         return result;
     }
     //判断是否空行

@@ -1,0 +1,184 @@
+// -*- coding: utf-8 -*-
+//         在此前提下，对本软件的使用同样需要遵守 Apache 2.0 许可。
+    // 开始测试
+test = 1 //;
+a = '#1'    #test2;
+b = "#2";
+c = '汉字';
+names = {"zhao", "钱", "sun", "李"}   // 数组;
+/*
+测试写成多行的列表,元组和字典
+*/
+colors = {
+    "黑",
+    "白",
+    "纂"
+];
+//元组
+tup =(
+    1,
+    2,
+    3
+);
+//字典
+dict = {
+    'john': 'boy',
+    'lily': 'girl'
+};
+
+// 函数的参数写成多行
+doSomeThing(
+    p1='a',
+    p2='b',
+    p3='c'
+);
+
+import functools; var wraps = functools.wraps;
+import rq.core.events; var EVENT, Event = rq.core.events.EVENT, rq.core.events.Event;
+import rq.utils.logger; var userSystemLog = rq.utils.logger.userSystemLog;
+
+//---------父类 Test-----------#
+class Test {
+    // 构造函数
+    ctor() {
+        this.a = 0;
+    // 不规范的注释缩进
+//----------------------
+        this.b = 0;
+        // -很长的语句,多行
+        if (((maxp-currentPrice)/currentPrice)*100>1 or sum(hi['volume'])<0.5*hiday['volume'] or 100*(currentPrice-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2) {
+            g.security.remove(stock);
+        }
+    }
+}
+
+
+//--------子类 ChildTest--------
+class ChildTest {
+    this = Test(...);// 继承的父类 <--请把这行移入类的构造函数 ctor 内! {
+    ctor() {
+        this.b = 1;
+    }
+}
+
+//--------孙类 SubChildTest, 继承自多个类--------
+class SubChildTest {
+    this = Test(...);// 继承的父类 <--请把这行移入类的构造函数 ctor 内! {
+    ctor() {
+        this.c = 2;
+        this.d=4 // 不规范的缩进3;
+        this.e=5 // 不规则的缩进5;
+    }
+}
+
+
+/*
+# 运行策略
+# @param func
+# @return wrapper
+*/
+runWhenStrategyNotHold = function(func) {
+    // test begin
+    if (true) {
+        a = 1;
+    } elseif (false) {
+        a = 0;
+    } else {
+        a = 2;
+    }
+
+    try {
+        a = 1 + w;
+    } catch(e) {
+        // 不带 as 的异常
+        print(e);
+        // pass;
+    } catch(/*Exception as */e) {
+        // 带 as 的异常
+        print('Exception error');
+    }
+    /*finally*/ {
+        print('ok');
+    }
+    // end test
+
+    import utils.logger; var systemLog = utils.logger.systemLog;
+    wrapper = function(*args, **kwargs) {
+        if (not Environment.getInstance().config) {
+            return func(*args, **kwargs);
+        } else {
+            systemLog.debug(_("not run {}({}, {}) because strategy is #hold#").format(func, args, kwargs));
+        }
+    }
+
+    return wrapper;
+}
+
+funTry = function() {
+    try {
+        print('try--start');
+        a = 1/0;
+    } catch(e) {
+        print 'normal except';
+    } catch(Exception) {
+        print 'Exception';
+    } catch(/*ValueError as */e) {
+        print('ValueError');
+    }
+    /*finally*/ {
+        return 'finally';
+    }
+}
+
+print(funTry());
+
+// 类
+class Strategy {
+    ctor(eventBus, scope, ucontext) {
+        // 类的属性和方法
+        this._userContext = ucontext;
+        this._currentUniverse = set();
+
+        this._init = scope.get('init', null);
+        this._handleBar = scope.get(
+            'handleBar', null
+            );
+
+        if (funcBeforeTrading != null and funcBeforeTrading.__code__.coArgcount > 1) {
+            this._beforeTrading = lambda(context) funcBeforeTrading(context, null);
+            userSystemLog.warn(_(string.format("deprecated parameter[barDict] in '%s' function.", 'beforeTrading')));
+        } else {
+            this._beforeTrading = funcBeforeTrading;
+        }
+        this._afterTrading = scope.get('afterTrading', null);
+
+        if (this._openAuction != null) {
+            eventBus.addListener(
+                EVENT.OPEN_AUCTION, 
+                this.openAuction
+            );
+        }
+    }
+
+    // @property;
+    userContext = function() {
+        return this._userContext;
+    }
+
+    init = function() {
+        if (this._init) {
+            // with 语句, 没法转换
+            with (ExecutionContext(EXECUTION_PHASE.ON_INIT)) {
+                with (ModifyExceptionFromType(EXC_TYPE.USER_EXC)) {
+                    this._init(this._userContext);
+                }
+            }
+        }
+
+        // 分为多行的函数参数
+        eventBus.publishEvent(Event(EVENT.POST_USER_INIT),true);
+
+
+
+    }
+}
