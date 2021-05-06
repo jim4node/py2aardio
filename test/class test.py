@@ -1,5 +1,7 @@
 #!/usr/bin/python3
- 
+import util.Parser as parser
+from pandas import DataFrame
+
 #类定义
 class people:
     #定义基本属性

@@ -1,4 +1,6 @@
 //!/usr/bin/python3
+import util.Parser; var parser = util.Parser;
+import pandas; var DataFrame = pandas.DataFrame;
 
 //类定义
 class people {
@@ -14,7 +16,7 @@ class people {
         this.__weight = w;
     }
     speak = function() {
-        print(string.format("%s 说: 我 %d 岁。", this.name,this.age));
+        console.log(string.format("%s 说: 我 %d 岁。", this.name,this.age));
     }
 }
 
@@ -29,7 +31,7 @@ class student {
     }
     //覆写父类的方法
     speak = function() {
-        print(string.format("%s 说: 我 %d 岁了，我在读 %d 年级", this.name,this.age,this.grade));
+        console.log(string.format("%s 说: 我 %d 岁了，我在读 %d 年级", this.name,this.age,this.grade));
     }
     //带有类型注解的函数声明
     age = function(b/*:bool*/, c/*:pd.UInt_16*/)/*-> int*/ {
@@ -39,12 +41,12 @@ class student {
 }
 
 if (owner == null) {
-    print("单元测试(Unit Test) in main module");
+    console.log("单元测试(Unit Test) in main module");
     /*
     创建类的实例,并调用类的方法
     */
     s = student('Ken', 10, 60, 3);
     s.speak();
 
-    print("main module end");
+    console.log("main module end");
 }

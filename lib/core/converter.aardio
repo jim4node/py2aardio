@@ -292,7 +292,8 @@ class converter {
     
     // 处理 self|except 之类的保留字
     replaceReservedWords = function(line) {
-        var pattern = `!\w(<self>|<elif>|<except>|<pass>|<raise>|<len>|<None>|<True>|<False>|<is not>|<is>)(\W)`;
+        // 保留字前不能有点号和变量字符
+        var pattern = `![\w\.](<self>|<elif>|<except>|<pass>|<raise>|<len>|<print>|<None>|<True>|<False>|<is not>|<is>)(\W)`;
         var result = string.replace(line, pattern, function($1, $2) {
             //console.debug($1, $2);
             var map = {
@@ -302,6 +303,7 @@ class converter {
                 ['pass'] = '// pass',	// 空语句
                 ['raise'] = 'error',
                 ['len'] = '#',
+                ['print'] = 'console.log',
                 ['None'] = 'null',
                 ['True'] = 'true',
                 ['False'] = 'false',
@@ -432,7 +434,7 @@ class converter {
         	src = this.camelize(src);
         }
         // 处理导入
-        src = this.replaceFromImports(src);
+        src = this.replaceImports(src);
         // 处理函数
         src = this.replaceFunctions(src);
         // 处理冒号的行
@@ -539,9 +541,10 @@ class converter {
         });
         return result;
     }
-    // 替换导入 from...import
-    replaceFromImports = function(src) {
-        var pattern = `from\s+([\w\.]+?)\s+import\s+([^\r;\:]+)`;	// imports
+    // 替换导入 imports : 1.from...import, 2.import...as
+    replaceImports = function(src) {
+        //1. from...import...
+        var pattern = `!\wfrom\s+([\w\.]+)\s+import\s+([^\r;\:]+)`;
         var result = string.replace(src, pattern, function($1, $2){
             var res = 'import ' ++ $1 ++ ';' //'import a.b;
             if($2 != '*') {
@@ -557,7 +560,14 @@ class converter {
             }
             //res = res ++ '\r\n';
             return res;
-        }); 
+        });
+        //2. import ... as ...
+        pattern = `!\wimport\s+([\w\.]+?)\s+as\s+([\w]+)`;
+        result = string.replace(result, pattern, function($1, $2){
+            // 单个导入别名, 转换: "import dataframe as df" ==> "import dataframe; var df = dataframe"
+            var res = 'import ' ++ $1 ++ '; var ' ++ $2 ++ ' = ' ++ $1;
+            return res;
+        });
         return result;
     }
     // 替换函数声明, 两种格式: 1.参数不带类型注解 2.参数带类型注解: def func(a:int,b:bool,c:str) -> float 
