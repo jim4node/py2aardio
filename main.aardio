@@ -122,9 +122,10 @@ var copyFile = function(fileFullName, cfg) {
 	if(fileFullName) {
 		var ok = fsys.copy(fileFullName, cfg.targetFile);
 		if(ok) {
+            thread.command.send('addTargetItem', 'file', cfg.targetFile);
 			thread.command.send('log', '[Info]successfully copied file: ' ++ fileFullName);
 		} else {
-			thread.command.send('log', '[Error]copy file error: '++ ', file='++fileFullName);
+			thread.command.send('log', '[Error]copy file error' ++ ', file='++fileFullName);
 		} 
 	}
 }
@@ -177,7 +178,8 @@ mainForm.btnStart.oncommand = function(id, event) {
         //批量处理文件夹
         fsys.enum(srcPath/*要遍历的目录*/, "*.*"/*指定查询文件名,支持windows掩码*/, function(dir, filename, fileFullName, findData) { //指定触发器
             if (filename) { //若是文件
-            	if (ext == '.py') { // 若是 py 文件 则转换格式
+            	var ext = fsys.getExtensionName(filename);
+            	if (ext == 'py') { // 若是 py 文件 则转换格式
             		//console.debug(fileFullName);
             		count++;
                 	//console.log("文件："++filename, ', dir='++dir, ',fileFullName='++fileFullName);
@@ -188,6 +190,7 @@ mainForm.btnStart.oncommand = function(id, event) {
                 elseif (cfg.copyOthers) {	// 否则,若需复制目录内的其它文件(用于整个工程的整体性转换)
                 	//console.debug(fileFullName);
                 	count++;
+                	thread.command.send('addSourceItem', 'file', fileFullName);
                 	cfg.targetFile = getTargetFullName(fileFullName, false); // 通过cfg传入目标文件完全路径(false=不修改扩展名)
                     thread.invoke(copyFile, fileFullName, cfg);
                 }
