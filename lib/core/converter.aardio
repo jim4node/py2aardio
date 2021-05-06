@@ -309,9 +309,9 @@ class converter {
         var result = string.replace(line, pattern, `\1(\2) `);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
-    // 替换 Unicode 字符串 u"str" 和 raw字符串 r"xxx"
+    // 替换 Unicode 字符串 u"str", f"xxx {}" 和 raw字符串 r"xxx"
     replaceUnicodeStr = function(line) {
-        var pattern = `[ur](['"])(.*?)\1`;
+        var pattern = `[urf](['"])(.*?)\1`;
         var result = string.replace(line, pattern, `\1\2\1`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }

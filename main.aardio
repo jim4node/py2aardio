@@ -1,5 +1,6 @@
 import win.ui;
 import win.ui.menu;
+import win.dlg.message;
 import fsys;
 import fsys.dlg;
 /*DSG{{*/
@@ -8,8 +9,9 @@ mainForm.add(
 btnSelSource={cls="button";text="...";left=449;top=28;right=486;bottom=52;aw=1;dt=1;tabstop=1;z=17};
 btnSelTarget={cls="button";text="...";left=449;top=58;right=486;bottom=82;aw=1;dt=1;tabstop=1;z=16};
 btnStart={cls="button";text="开始转换";left=573;top=59;right=651;bottom=83;dr=1;dt=1;tabstop=1;z=6};
-cbAddSemicolon={cls="checkbox";text="行尾加分号";left=609;top=8;right=696;bottom=22;checked=1;dr=1;tabstop=1;z=12};
+cbAddSemicolon={cls="checkbox";text="行尾加分号";left=608;top=32;right=695;bottom=46;checked=1;dr=1;tabstop=1;z=12};
 cbCamelize={cls="checkbox";text="驼峰式命名";left=518;top=32;right=605;bottom=46;checked=1;dr=1;tabstop=1;z=13};
+cbCopyOthers={cls="checkbox";text="复制其它文件";left=608;top=8;right=704;bottom=22;checked=1;dr=1;tabstop=1;z=18};
 cbSubDir={cls="checkbox";text="包含子目录";left=519;top=8;right=606;bottom=22;checked=1;dr=1;tabstop=1;z=9};
 edtSourceCode={cls="edit";left=14;top=275;right=483;bottom=573;ah=1;aw=1;db=1;dl=1;edge=1;hscroll=1;multiline=1;vscroll=1;z=5};
 edtSourcePath={cls="edit";text="D:\Documents\My Projects\Aardio\py2aardio\test\strategy.py";left=78;top=28;right=444;bottom=52;acceptfiles=1;aw=1;dl=1;dt=1;edge=1;multiline=1;tabstop=1;z=2};
@@ -29,84 +31,104 @@ import core.converter;
 import thread.command;
 sourceType = 'file';
 
-var sourceRoot = '';	//源文件的根目录
-var targetRoot = '';	//目标文件的根目录
+var sourceRoot = ''; //源文件的根目录
+var targetRoot = ''; //目标文件的根目录
 
-// 获取目标文件的完整路径文件名
-var getTargetFullName = function(fileFullName, ext='aardio') {
+// 根据源文件和根目录, 获取目标文件的完整路径文件名
+var getTargetFullName = function(fileFullName, ext = 'aardio') {
     // 例: "C:\Documents\My Projects\python\test.py"
-    var b, e = string.indexOf(fileFullName, sourceRoot);	//此处不能用string.replace或find, 模式串匹配不到
+    var b, e = string.indexOf(fileFullName, sourceRoot); //此处不能用string.replace或find, 模式串匹配不到
     assert(b > 0, "源文件路径异常");
     var relativePath = '';
     relativePath = string.slice(fileFullName, e + 1);
-    //在目标根目录后面加上相对路径
+    //在目标根目录后面加上相对路径(含文件名)
     var result = targetRoot + relativePath;
-   	//console.debug('getTargetFullName:\r\n\tfileFullName=', fileFullName,'\r\n\tsourceRoot=', sourceRoot, '\r\n\ttargetRoot=', targetRoot, '\r\n\tresult=', result);
-	//将文件扩展名改为 ".aardio"
-	var p = string.lastIndexAny(result, ".");
-	if(p) {
-		result = string.left(result, p);
-	}
-	result ++= ext;
-	//console.debug('getTargetFullName:result=', result);
+    //console.debug('getTargetFullName:\r\n\tfileFullName=', fileFullName,'\r\n\tsourceRoot=', sourceRoot, '\r\n\ttargetRoot=', targetRoot, '\r\n\tresult=', result);
+    if(ext) {	// 若指定了文件扩展名
+    	// 则修改文件扩展名, 默认改为 ".aardio"
+    	var p = string.lastIndexAny(result, ".");
+    	if (p) {
+        	result = string.left(result, p);
+    	}
+    	result ++= ext;
+    }
+    //console.debug('getTargetFullName:result=', result);
     return result;
 };
 
 // 转换单个文件
 var convertSingleFile = function(fileFullName, cfg) {
-    if(fileFullName){
-		//assert( string.load( fileFullName ) );
-		var src = string.load( fileFullName );
-		if(#src) {
-			mainForm.edtSourceCode.text = src;
-        	mainForm.edtSourcePath.text = fileFullName;
-         	
-   			mainForm.edtSourceCode.color = 0;
-   			mainForm.edtSourceCode.redraw();
-   			
-   			mainForm.edtSourcePath.color = 0;
-   			mainForm.edtSourcePath.redraw();
-   			var cvter = core.converter(src, cfg);
-   			var tag = fsys.getFileName(fileFullName);
-   			var result, err = cvter.go(tag);
-   			if(result) {
-   				mainForm.edtTargetCode.text = result;
-				var res = string.save(cfg.targetFile, result);		//保存到文件
-   				thread.command.send('addTargetItem', 'file', cfg.targetFile);
-   			} else {
-   				//TODO: command listener 'log'
-   				thread.command.send('log', '[Error]conversion error:'++ err ++ ', file: '++fileFullName);
-   			}
-   		} else {
-   			//TODO: command listener 'log'
-   			thread.command.send('log', '[Warn]Empty source file: '++fileFullName);
-   		}
+    if (fileFullName) {
+        //assert( string.load( fileFullName ) );
+        var src = string.load(fileFullName);
+        if (#src) {
+            mainForm.edtSourceCode.text = src;
+            mainForm.edtSourcePath.text = fileFullName;
+
+            mainForm.edtSourceCode.color = 0;
+            mainForm.edtSourceCode.redraw();
+
+            mainForm.edtSourcePath.color = 0;
+            mainForm.edtSourcePath.redraw();
+            var cvter = core.converter(src, cfg);
+            var tag = fsys.getFileName(fileFullName);
+            var result, err = cvter.go(tag);
+            if (result) {
+                mainForm.edtTargetCode.text = result;
+                var res = string.save(cfg.targetFile, result); //保存到文件
+                thread.command.send('addTargetItem', 'file', cfg.targetFile);
+            } else {
+                //TODO: command listener 'log'
+                thread.command.send('log', '[Error]conversion error:'++err++', file: '++fileFullName);
+            }
+        } else {
+            //TODO: command listener 'log'
+            thread.command.send('log', '[Warn]Empty source file: '++fileFullName);
+        }
     }
 };
 
 //文件转换线程, 用于批量转换
 //@thread function
-var convertFn = function(dir, filename, fileFullName, cfg) {
-    import core.converter;
+var convertFn = function(dir, tagname, fileFullName, cfg) {
     import thread.command;
     //import console;
+	import core.converter;
     
-    if(fileFullName){
-		var src = string.load( fileFullName );
-		if(#src) {			
-   			var cvter = core.converter(src, cfg);
-   			var result, err = cvter.go(filename);
-   			if(result) {
-   				var res = ..string.save(cfg.targetFile, result);		// 保存文件
-   				thread.command.send('addTargetItem', 'file', cfg.targetFile);
-   			} else {
-   				thread.command.send('log', '[Error]conversion error:'++ err ++ ',file='++fileFullName);
-   			}
-   		} else {
-   			thread.command.send('log', '[Warn]Empty source file: '++fileFullName);
-   		}
+    if (fileFullName) {
+        var src = string.load(fileFullName);
+        if (#src) {
+            var cvter = core.converter(src, cfg);
+            var result, err = cvter.go(tagname);
+            if (result) {
+                var res = ..string.save(cfg.targetFile, result); // 保存文件
+                thread.command.send('addTargetItem', 'file', cfg.targetFile);
+            } else {
+                thread.command.send('log', '[Error]conversion error:'++err++',file='++fileFullName);
+            }
+        } else {
+            thread.command.send('log', '[Warn]Empty source file: '++fileFullName);
+        }
     }
 };
+
+//文件复制, 用于项目的整体转换(复制其它格式的文件)
+//@thread function
+var copyFile = function(fileFullName, cfg) {
+	import thread.command;
+    //import console;
+    import fsys;
+    
+	if(fileFullName) {
+		var ok = fsys.copy(fileFullName, cfg.targetFile);
+		if(ok) {
+			thread.command.send('log', '[Info]successfully copied file: ' ++ fileFullName);
+		} else {
+			thread.command.send('log', '[Error]copy file error: '++ ', file='++fileFullName);
+		} 
+	}
+}
+
 
 var listener = thread.command();
 listener.addSourceItem = function(sourceType, item) {
@@ -117,118 +139,132 @@ listener.addTargetItem = function(sourceType, item) {
     mainForm.lbTarget.add(item);
 };
 
-mainForm.btnStart.oncommand = function(id,event){
+listener.log = function(logLevel, str) {
+    //TODO: log 输出
+};
+    
+mainForm.btnStart.oncommand = function(id, event) {
     var srcPath = string.trim(mainForm.edtSourcePath.text);
-    if(#srcPath == 0) {
+    if (#srcPath == 0) {
         mainForm.msgErr("请选择源文件或目录!");
         return false;
     }
     sourceRoot = sourceType == 'dir' ? srcPath : fsys.getParentDir(srcPath);
     targetRoot = string.trim(mainForm.edtTargetPath.text);
-    if(#targetRoot == 0) {
+    if (#targetRoot == 0) {
         mainForm.msgErr("请选择目标文件的目录!");
         return false;
     }
     var tail = targetRoot[#targetRoot];
-    if(tail != '\\'#) targetRoot ++= "\";
-    
+    if (tail != '\\'#) targetRoot ++= "\";
+
     var srcPath = mainForm.edtSourcePath.text;
     mainForm.lbSource.clear();
     mainForm.lbTarget.clear();
     var cfg = {
-        addSemicolon = mainForm.cbAddSemicolon.checked == 1;
-        camelize = mainForm.cbCamelize.checked == 1;        
+        addSemicolon = mainForm.cbAddSemicolon.checked == 1;	//行尾添加分号
+        camelize = mainForm.cbCamelize.checked == 1;			//改为驼峰式命名
+        copyOthers = mainForm.cbCopyOthers.checked == 1;		//复制其它格式文件, 用于整个工程的整体性转换
     };
-    
-	if(sourceType == 'file') {
-		thread.command.send('addSourceItem', 'file', srcPath);
-		cfg.targetFile = getTargetFullName(srcPath); // 通过cfg传入目标文件完全路径
-		convertSingleFile(srcPath, cfg);	// 转换单个文件
-	} elseif(sourceType == 'dir') {
-		var count = 0;					// 转换目录
-		//批量处理文件夹
-		fsys.enum(srcPath/*要遍历的目录*/, "*.py"/*指定查询文件名,支持windows掩码*/,
-			function(dir, filename, fileFullName, findData){ //指定触发器
-				count++;
-				if(filename) {//若是文件
-					//console.log("文件："++filename, ', dir='++dir, ',fileFullName='++fileFullName);
-           			thread.command.send('addSourceItem', 'file', fileFullName);
-           			cfg.targetFile = getTargetFullName(fileFullName); // 通过cfg传入目标文件完全路径
-           			thread.invoke(convertFn, dir, filename, fileFullName, cfg);
-				}
-				/* else {	//是目录
-					//console.log("目录：", dir)
-					thread.command.send('addSourceItem', 'dir', dir);
-				}
-				*/
-			}, mainForm.cbSubDir.checked == 1/*是否递归子目录*/
-		);//fsys.enum 
-		if(count == 0) {
-			mainForm.msgWarn('未发现有效的 python 文件');
-		}
-	}
+
+    if (sourceType == 'file') {
+        thread.command.send('addSourceItem', 'file', srcPath);
+        cfg.targetFile = getTargetFullName(srcPath); // 通过cfg传入目标文件完全路径
+        convertSingleFile(srcPath, cfg); // 转换单个文件
+    }
+    elseif(sourceType == 'dir') {
+        var count = 0; // 转换总数量
+        //批量处理文件夹
+        fsys.enum(srcPath/*要遍历的目录*/, "*.*"/*指定查询文件名,支持windows掩码*/, function(dir, filename, fileFullName, findData) { //指定触发器
+            if (filename) { //若是文件
+            	if (ext == '.py') { // 若是 py 文件 则转换格式
+            		//console.debug(fileFullName);
+            		count++;
+                	//console.log("文件："++filename, ', dir='++dir, ',fileFullName='++fileFullName);
+                	thread.command.send('addSourceItem', 'file', fileFullName);
+                	cfg.targetFile = getTargetFullName(fileFullName); // 通过cfg传入目标文件完全路径
+                	thread.invoke(convertFn, dir, filename, fileFullName, cfg);
+                } 
+                elseif (cfg.copyOthers) {	// 否则,若需复制目录内的其它文件(用于整个工程的整体性转换)
+                	//console.debug(fileFullName);
+                	count++;
+                	cfg.targetFile = getTargetFullName(fileFullName, false); // 通过cfg传入目标文件完全路径(false=不修改扩展名)
+                    thread.invoke(copyFile, fileFullName, cfg);
+                }
+            }
+            /* else {	//若是目录
+				//console.log("目录：", dir)
+				thread.command.send('addSourceItem', 'dir', dir);
+			}
+			*/
+        }, mainForm.cbSubDir.checked == 1 /*是否递归子目录*/ ); //fsys.enum 
+        if (count == 0) {
+            thread.command.send('log', '[Warn]no python file found');
+            mainForm.msgWarn('未发现有效的 python 文件');
+        }
+    }
 }
 
 import console;
-mainForm.edtSourceCode.wndproc = function(hwnd,message,wParam,lParam){
-	select(message) {
-		case 0x115/*_WM_VSCROLL*/ {
-			//TODO: 转换成相对百分比%
-			var event, pos = ::LOWORD(wParam), ::HIWORD(wParam);
-        	//console.debug('edtSourceCode.vscroll msg: event='++tostring(event, 16)++', pos='++tostring(pos,16));
-			//var min,max,page = scrollbar.getRange();
-			mainForm.edtTargetCode.sendMessage(message, wParam, lParam);
-		}
-		case 0x114/*_WM_HSCROLL*/ {
-			//console.debug('edtSourceCode.hscroll to', tostring(wParam,16) , tostring(lParam,16));
-			mainForm.edtTargetCode.sendMessage(message, wParam, lParam);
-		}
-	}
-	//无返回值则继续调用默认回调函数
+mainForm.edtSourceCode.wndproc = function(hwnd, message, wParam, lParam) {
+    select(message) {
+        case 0x115 /*_WM_VSCROLL*/ {
+            //TODO: 转换成相对百分比%
+            var event, pos = ::LOWORD(wParam),
+                ::HIWORD(wParam);
+            //console.debug('edtSourceCode.vscroll msg: event='++tostring(event, 16)++', pos='++tostring(pos,16));
+            //var min,max,page = scrollbar.getRange();
+            mainForm.edtTargetCode.sendMessage(message, wParam, lParam);
+        }
+        case 0x114 /*_WM_HSCROLL*/ {
+            //console.debug('edtSourceCode.hscroll to', tostring(wParam,16) , tostring(lParam,16));
+            mainForm.edtTargetCode.sendMessage(message, wParam, lParam);
+        }
+    }
+    //无返回值则继续调用默认回调函数
 }
 
 //TODO: 点击左右列表框, 切换显示相应的源代码
 
 // 使目标路径与源文件路径相同
 var targetFollowSrcPath = function() {
-	var path = mainForm.edtSourcePath.text;
-    if(path) {
-        if(sourceType == 'file') {
-        	path = fsys.getParentDir(path);
+    var path = mainForm.edtSourcePath.text;
+    if (path) {
+        if (sourceType == 'file') {
+            path = fsys.getParentDir(path);
         }
         mainForm.edtTargetPath.text = path;
-        targetRoot = path;    
+        targetRoot = path;
     }
 };
 
 // 选择源文件-单个文件-菜单项点击事件
 var miSelSrcFileClick = function(id) {
     var initDir = mainForm.edtSourcePath.text;
-    if(sourceType == 'file') {
+    if (sourceType == 'file') {
         initDir = fsys.getParentDir(initDir);
     }
-    var pathfile = fsys.dlg.open("Python文件|*.py|所有文件|*.*||", "选择要转换的Python源文件", initDir); 
-	if(pathfile) {
-		sourceType = 'file';
-		mainForm.edtSourcePath.text = pathfile;
-		targetFollowSrcPath();
-	}
+    var pathfile = fsys.dlg.open("Python文件|*.py|所有文件|*.*||", "选择要转换的Python源文件", initDir);
+    if (pathfile) {
+        sourceType = 'file';
+        mainForm.edtSourcePath.text = pathfile;
+        targetFollowSrcPath();
+    }
 };
 
 // 选择源文件-文件夹-菜单项点击事件
 var miSelSrcFolderClick = function(id) {
     var initDir = mainForm.edtSourcePath.text;
-    if(sourceType == 'file') {
+    if (sourceType == 'file') {
         initDir = fsys.getParentDir(initDir);
     }
     var pathfile = fsys.dlg.opendir(initDir, mainForm);
-	if(pathfile){
-		sourceType = 'dir';
-		mainForm.edtSourcePath.text = pathfile;
-		targetFollowSrcPath();
-	}
+    if (pathfile) {
+        sourceType = 'dir';
+        mainForm.edtSourcePath.text = pathfile;
+        targetFollowSrcPath();
+    }
 };
-
 
 // 选择目标文件夹-同源文件-菜单项点击事件
 var miSelTargetFollowSrcClick = function(id) {
@@ -238,28 +274,28 @@ var miSelTargetFollowSrcClick = function(id) {
 // 选择目标文件夹-另选别处-菜单项点击事件
 var miSelTargetOtherFolderClick = function(id) {
     var initDir = mainForm.edtSourcePath.text;
-    if(sourceType == 'file') {
+    if (sourceType == 'file') {
         initDir = fsys.getParentDir(initDir);
     }
     var path = fsys.dlg.opendir(initDir, mainForm);
-	if(path){
-		mainForm.edtTargetPath.text = path;
-		targetRoot = path;
-	}
+    if (path) {
+        mainForm.edtTargetPath.text = path;
+        targetRoot = path;
+    }
 };
-    
-mainForm.btnSelSource.oncommand = function(id,event){
-	var popmenu = win.ui.popmenu(mainForm);
-	popmenu.add('单个文件...', miSelSrcFileClick);
-	popmenu.add('文件夹...', miSelSrcFolderClick);
-	popmenu.popup(owner.right - owner.width / 2, owner.bottom);// owner is the button
+
+mainForm.btnSelSource.oncommand = function(id, event) {
+    var popmenu = win.ui.popmenu(mainForm);
+    popmenu.add('单个文件...', miSelSrcFileClick);
+    popmenu.add('文件夹...', miSelSrcFolderClick);
+    popmenu.popup(owner.right - owner.width / 2, owner.bottom); // owner is the button
 }
 
-mainForm.btnSelTarget.oncommand = function(id,event){
-	var popmenu = win.ui.popmenu(mainForm);
-	popmenu.add('同源文件', miSelTargetFollowSrcClick); 
-	popmenu.add('另选别处...', miSelTargetOtherFolderClick);
-	popmenu.popup(owner.right - owner.width / 2, owner.bottom);// owner is the button
+mainForm.btnSelTarget.oncommand = function(id, event) {
+    var popmenu = win.ui.popmenu(mainForm);
+    popmenu.add('同源文件', miSelTargetFollowSrcClick);
+    popmenu.add('另选别处...', miSelTargetOtherFolderClick);
+    popmenu.popup(owner.right - owner.width / 2, owner.bottom); // owner is the button
 }
 
 mainForm.show();

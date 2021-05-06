@@ -167,7 +167,8 @@ class Strategy {
 
     init = function() {
         if (this._init) {
-            // with 语句, 没法转换:(with ExecutionContext(EXECUTION_PHASE.ON_INIT):
+            // with 语句, 没法转换
+            with (ExecutionContext(EXECUTION_PHASE.ON_INIT)) {
                 with (ModifyExceptionFromType(EXC_TYPE.USER_EXC)) {
                     this._init(this._userContext);
                 }
