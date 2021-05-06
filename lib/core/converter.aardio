@@ -560,13 +560,15 @@ class converter {
         }); 
         return result;
     }
-    // 替换函数
+    // 替换函数声明, 两种格式: 1.参数不带类型注解 2.参数带类型注解: def func(a:int,b:bool,c:str) -> float 
     replaceFunctions = function(src) {
-        var pattern = `!\wdef\s+([\w\$]+)\s*\((.*?)\)\s*(\:)`;
-        var result = string.replace(src, pattern, function($1, $2, $3){
+        var pattern = `!\wdef\s+([\w\$]+)\s*\((.*?)\)\s*([^$]*?)\s*(\:)`;// old: `!\wdef\s+([\w\$]+)\s*\((.*?)\)\s*(\:)`
+        var result = string.replace(src, pattern, function($1, $2, $3, $4){
             $2 = string.trim($2);
-            $2 = string.replace($2, `^(<self>|<this>)[\s\,]*`, ''); //去除 self,
-            var res = $1 ++ ' = function(' ++ $2 ++ ')' ++ $3;
+            $2 = string.replace($2, `^(<self>|<this>)[\s\,]*`, ''); //去除 self/this
+            $2 = string.replace($2, `(\:\s*[\w+\.]*)`, `/*\1*/`);	//注释掉类型注解
+            //console.debug('func: ' ++ $1 ++ ', params: ' ++ $2);
+            var res = $1 ++ ' = function(' ++ $2 ++ ')' ++ (#$3 > 0 ? '/*'++$3++'*/' : '') ++ $4; //结尾的冒号须保留, 以便产生右花括号
             res = string.replace(res, `__init__\s*=\s*function\s*`, 'ctor');	//类的构造函数
             res = string.replace(res, `__del__\s*=\s*function\s*`, 'destructor');	//类的析构函数
             res = string.replace(res, `__str__\s*=\s*function\s*`, '_tostring');	//类的 tostring

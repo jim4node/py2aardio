@@ -21,17 +21,21 @@ class student(people):
     def __init__(self,n,a,w,g):
         #调用父类的构函
         people.__init__(self,n,a,w)
-        self.grade = g
+        self.grade = g  # 子类的新增成员: 年级
     #覆写父类的方法
     def speak(self):
         print("%s 说: 我 %d 岁了，我在读 %d 年级"%(self.name,self.age,self.grade))
- 
-print "This is a demo class"
-"""
-创建类的实例,并调用类的方法
-"""
-s = student('ken', 10, 60, 3)
-s.speak()
-
+    #带有类型注解的函数声明
+    def age(self, b:bool, c:pd.UInt_16) -> int:
+        # do something...
+        return self.age
+        
 if __name__ == "__main__":
-    print("main module")
+    print("单元测试(Unit Test) in main module")
+    """
+    创建类的实例,并调用类的方法
+    """
+    s = student('Ken', 10, 60, 3)
+    s.speak()
+    
+    print("main module end")

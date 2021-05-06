@@ -40,17 +40,24 @@ class student(people):
     def __init__(self,n,a,w,g):
         #调用父类的构函
         people.__init__(self,n,a,w)
-        self.grade = g
+        self.grade = g  # 子类的新增成员: 年级
     #覆写父类的方法
     def speak(self):
         print("%s 说: 我 %d 岁了，我在读 %d 年级"%(self.name,self.age,self.grade))
- 
-print "This is a demo class"
-"""
-创建类的实例,并调用类的方法
-"""
-s = student('ken', 10, 60, 3)
-s.speak()
+    #带有类型注解的函数声明
+    def age(self, b:bool, c:pd.UInt_16) -> int:
+        # do something...
+        return self.age
+        
+if __name__ == "__main__":
+    print("单元测试(Unit Test) in main module")
+    """
+    创建类的实例,并调用类的方法
+    """
+    s = student('Ken', 10, 60, 3)
+    s.speak()
+    
+    print("main module end")
 ```
 转换为如下所示 aardio 源代码:
 ```js
@@ -81,20 +88,29 @@ class student {
     ctor(n,a,w,g) {
         //调用父类的构函
         people.__init__(this,n,a,w);
-        this.grade = g;
+        this.grade = g  // 子类的新增成员: 年级;
     }
     //覆写父类的方法
     speak = function() {
         print(string.format("%s 说: 我 %d 岁了，我在读 %d 年级", this.name,this.age,this.grade));
     }
+    //带有类型注解的函数声明
+    age = function(b/*:bool*/, c/*:pd.UInt_16*/)/*-> int*/ {
+        // do something...
+        return this.age;
+    }
 }
 
-print "This is a demo class";
-/*
-创建类的实例,并调用类的方法
-*/
-s = student('ken', 10, 60, 3);
-s.speak();
+if (owner == null) {
+    print("单元测试(Unit Test) in main module");
+    /*
+    创建类的实例,并调用类的方法
+    */
+    s = student('Ken', 10, 60, 3);
+    s.speak();
+
+    print("main module end");
+}
 ```
 
 ### 更新记录:
@@ -109,7 +125,8 @@ s.speak();
 5. 2021-05-04 v1.3  修复和优化
 6. 2021-05-06 v1.4  新增: 选项:复制其它非'.py'格式文件, 以便进行项目的整体转换
 7. 2021-05-07 v1.5  新增: 替换全局性的特定词句(例如: name == main)
-                    
+8. 2021-05-07 v1.6  新增: 支持带类型注解的函数声明
+
 ### TODO 待办事宜
 1. Python 语言的列表推导式转换
 2. ~~Python 语言的多行列表[]的转换(目前转换较混乱)~~ 已完成√
