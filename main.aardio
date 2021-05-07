@@ -9,9 +9,10 @@ mainForm.add(
 btnSelSource={cls="button";text="...";left=449;top=28;right=486;bottom=52;aw=1;dt=1;tabstop=1;z=17};
 btnSelTarget={cls="button";text="...";left=449;top=58;right=486;bottom=82;aw=1;dt=1;tabstop=1;z=16};
 btnStart={cls="button";text="开始转换";left=573;top=59;right=651;bottom=83;dr=1;dt=1;tabstop=1;z=6};
-cbAddSemicolon={cls="checkbox";text="行尾加分号";left=608;top=32;right=695;bottom=46;checked=1;dr=1;tabstop=1;z=12};
-cbCamelize={cls="checkbox";text="驼峰式命名";left=518;top=32;right=605;bottom=46;checked=1;dr=1;tabstop=1;z=13};
-cbCopyOthers={cls="checkbox";text="复制其它文件";left=608;top=8;right=704;bottom=22;checked=1;dr=1;tabstop=1;z=18};
+cbAddSemicolon={cls="checkbox";text="行尾加分号";left=633;top=32;right=720;bottom=46;checked=1;dr=1;tabstop=1;z=12};
+cbCamelizeFile={cls="checkbox";text="文件名改驼峰式";left=740;top=8;right=854;bottom=22;checked=1;dr=1;tabstop=1;z=19};
+cbCamelizeVar={cls="checkbox";text="变量名改驼峰式";left=518;top=32;right=628;bottom=46;checked=1;dr=1;tabstop=1;z=13};
+cbCopyOthers={cls="checkbox";text="复制其它文件";left=633;top=8;right=729;bottom=22;dr=1;tabstop=1;z=18};
 cbSubDir={cls="checkbox";text="包含子目录";left=519;top=8;right=606;bottom=22;checked=1;dr=1;tabstop=1;z=9};
 edtSourceCode={cls="edit";left=14;top=275;right=483;bottom=573;ah=1;aw=1;db=1;dl=1;edge=1;hscroll=1;multiline=1;vscroll=1;z=5};
 edtSourcePath={cls="edit";text="D:\Documents\My Projects\Aardio\py2aardio\test\strategy.py";left=78;top=28;right=444;bottom=52;acceptfiles=1;aw=1;dl=1;dt=1;edge=1;multiline=1;tabstop=1;z=2};
@@ -164,7 +165,8 @@ mainForm.btnStart.oncommand = function(id, event) {
     mainForm.lbTarget.clear();
     var cfg = {
         addSemicolon = mainForm.cbAddSemicolon.checked == 1;	//行尾添加分号
-        camelize = mainForm.cbCamelize.checked == 1;			//改为驼峰式命名
+        camelizeVar = mainForm.cbCamelizeVar.checked == 1;		//变量名改为驼峰式
+        camelizeFile = mainForm.cbCamelizeFile.checked == 1;	//文件名改为驼峰式
         copyOthers = mainForm.cbCopyOthers.checked == 1;		//复制其它格式文件, 用于整个工程的整体性转换
     };
 
@@ -179,6 +181,7 @@ mainForm.btnStart.oncommand = function(id, event) {
         fsys.enum(srcPath/*要遍历的目录*/, "*.*"/*指定查询文件名,支持windows掩码*/, function(dir, filename, fileFullName, findData) { //指定触发器
             if (filename) { //若是文件
             	var ext = fsys.getExtensionName(filename);
+            	console.log("src file：" ++ fileFullName);
             	if (ext == 'py') { // 若是 py 文件 则转换格式
             		//console.debug(fileFullName);
             		count++;
