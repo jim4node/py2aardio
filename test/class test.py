@@ -13,7 +13,7 @@ class people:
     def __init__(self,n,a,w):
         assert a > 0, "年龄不能是负数"
         assert n > '', '姓名不能为空'
-        assert w > 0
+        assert w > 0    # 没有错误信息
         self.name = n
         self.age = a
         self.__weight = w
@@ -38,6 +38,17 @@ class student(people):
         
 if __name__ == "__main__":
     print("单元测试(Unit Test) in main module")
+    # 测试 del 语句
+    a = 0
+    b = 1
+    try:
+        del a   # 删除变量
+        del b
+        del a_df["file"]   # 删除元素
+        del df[2]
+    except e:
+        print(e)
+        
     """
     创建类的实例,并调用类的方法
     """

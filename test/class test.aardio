@@ -13,7 +13,7 @@ class people {
     ctor(n,a,w) {
         assert(a > 0, "年龄不能是负数");
         assert(n > '', '姓名不能为空', "");
-        assert(w > 0, "");
+        assert(w > 0 , "");    // 没有错误信息
         this.name = n;
         this.age = a;
         this.__weight = w;
@@ -31,7 +31,7 @@ class student {
         //调用父类的构函
         people.__init__(this,n,a,w);
         assert(g > 0, "");
-        this.grade = g  // 子类的新增成员: 年级;
+        this.grade = g;  // 子类的新增成员: 年级
     }
     //覆写父类的方法
     speak = function() {
@@ -46,6 +46,18 @@ class student {
 
 if (owner == null) {
     console.log("单元测试(Unit Test) in main module");
+    // 测试 del 语句
+    a = 0;
+    b = 1;
+    try {
+        a  = null;   // 删除变量
+        b = null;
+        aDf["file"]  = null;   // 删除元素
+        df[2] = null;
+    } catch(e) {
+        console.log(e);
+    }
+
     /*
     创建类的实例,并调用类的方法
     */

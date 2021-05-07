@@ -154,7 +154,7 @@ class converter {
     
     // 打印出语句中的关键词
     getKeywords = function(line) {
-        // python 和 aardio 的关键字都算, !pattern 是边界断言, `!\w(xxx)\W` 表示以单词字母开始,且以非单词字符结束
+        // python 和 aardio 的保留字都算, !pattern 是边界断言, `!\w(xxx)\W` 表示以单词字母开始,且以非单词字符结束
         var pattern = `!\w(<and>|<as>|<assert>|<begin>|<break>|<case>|<catch>|<class>|<continue>|<def>|<del>|<do>|<elif>|<elseif>|<else>|<end>|<except>|<finally>|<for>|<from>|<false>|<False>|<global>|<if>|<import>|<in>|<is>|<lambda>|<nonlocal>|<not>|<None>|<or>|<pass>|<print>|<raise>|<return>|<select>|<this>|<try>|<true>|<True>|<var>|<while>|<with>|<yield>)\W`;
         var list = {};
         for kw in string.gmatch(line, pattern) { 
@@ -167,7 +167,7 @@ class converter {
     // 句尾加分号
     addSemicolon = function(line) {
     	var keywords = this.getKeywords(line);
-    	// 若第一个关键字不是这些语句, 则加上分号
+    	// 若第一个保留字不是这些语句, 则加上分号
     	//TODO: 去掉注释, 找到真实的句尾
         if(#keywords == 0 or !..table.find({'begin','def','class','while','function','for','if','else','elif','elseif','except','try','catch','finally','select','case','with'}, keywords[1])) 
         	line = line ++ ';';
@@ -186,36 +186,39 @@ class converter {
 			// 处理单行注释
         	var newLine = this.replaceSingleLineComment(line);	// '#' => '//'
         	emptyLine = this.isEmptyLine(newLine);
-        	newLine = this.encodeStrLiterals(newLine, true);	// 加密语句中的字符串, 使其中文本无法参与语法分析
-        	/***故下面所有的行内内容处理时, 不用担心会匹配到字符串内可能存在的 python 关键字***/
-        	if(!emptyLine) {        		
-        		// TODO: 处理列表的声明性语句 '= [...]' (不包括其它[])
-        		newLine = this.replaceList(newLine);	// 尚有 bug
+        	newLine = this.encodeStrLiterals(newLine, true);	// 加密语句中的字符串, 使其文本无法参与语法分析
+        	var comment = '';
+        	/***故下面所有的行内内容处理时, 不用担心会匹配到字符串内可能存在的 python 保留字***/
+        	if(!emptyLine) {
+        		// 预先去除行尾的注释
+        		newLine, comment = this.removeComment(newLine);
+        		/*** 行尾注释已去除, 下面不用担心会匹配到注释里去了***/
+        		// 处理列表的声明性语句 '= [...]' (不包括其它[])
+        		newLine = this.replaceList(newLine);	//TODO: 尚有 bug
         		// 处理 if|elif|while等带控制语句
         		newLine = this.replaceColonStmt(newLine);
         		// 处理修饰符
         		newLine = this.replaceDecorator(newLine);
-        		// 处理class (parent): 带有继承的类 
+        		// 处理 class (parent): 带有继承的类 
         		newLine = this.replaceClass(newLine);
         		// 处理 lambda 表达式
         		newLine = this.replaceLambda(newLine);
         		// 处理 except 和 finally 子句
         		newLine = this.replaceExceptFinally(newLine, i);
-        		//TODO: 处理 del
-        		//newLine = this.replaceDel(newLine);
+        		// 处理 del 语句
+        		newLine = this.replaceDel(newLine);
+        		// 处理 assert 语句
+        		newLine = this.replaceAssert(newLine);
         		// 处理 转换 self->this, except->catch 之类的其它保留字
         		newLine = this.replaceReservedWords(newLine);
         		// 处理 Unicode 字符串格式 u"..." 和 raw string r"..."
         		newLine = this.replaceUnicodeStr(newLine);
         		// 处理 字符串格式化 '...' % (...)
         		newLine = this.replaceStrFormat(newLine);
-        		// 处理 assert
-        		newLine = this.replaceAssert(newLine);
         		// TODO: 处理列表推导式: [x for x in range(10) if x % 2 == 0 else...]
         		//newLine = this.replaceListComprehension(newLine);
         		// TODO: 处理列表的 hasattr, getattr, setattr 等 attr 函数
         		//newLine = this.replaceAttrFunc(newLine);
-
         	}
         	// 处理缩进, 附加返回newIndent-新的缩进, brackets-附加的花括号内容
         	newLine, prevIndent, brackets = this.replaceIndents(i, newLine, prevIndent, emptyLine);
@@ -229,9 +232,11 @@ class converter {
         		newLine = this.addSemicolon(newLine);
         	}
         	newLine = this.encodeStrLiterals(newLine, false);	// 还原语句中的字符串
+        	// 恢复句尾的注释(如果有的话)
+        	newLine = newLine ++ comment;
         	..table.push(newLines, newLine);
         	//若非空行, 则更新"最近的代码行号", 用于后续花括号插入时定位
-        	if(!emptyLine) {
+        	if(!emptyLine) {        		
         		prevCodeLine = #newLines + 1;
         	}
        	}
@@ -242,12 +247,33 @@ class converter {
     	return result, err;
     }
     
-    // 处理断言
-    replaceAssert = function(line) {
-        
+    // 去除行尾的注释
+    removeComment = function(line) {
         var result = line;
-        // TODO: 模式有bug, 无法正确处理 assert( a > '', 'xx') 这种判断子句和错误信息都使用相同引号的情况
-        // 需要手工修改, 但不影响使用
+        var comment = '';
+        /* 行内的字符串已被加密, 一般不必担心会参与匹配 */
+        var pattern = `\s*(<\#>|<\/\*>|<\/\/>)(.*?)([^\r\n]+)`;	// 即考虑python 原生注释'#' , 也考虑可能预先已被替换过的注释
+        var b, e = string.find(result, pattern);
+        if (b) {	// 若找到, 则截断, 并取出注释内容
+            comment = string.slice(result, b, e);
+            result = string.slice(result, 1, b);
+        }
+        return result, comment;
+    }
+    
+    // 处理 del 语句
+    replaceDel = function(line) {
+        var result = line;
+        var pattern = `!\w(del)\s+([^\r\n]+)`;
+        result = string.replace(result, pattern, `\2 = null`);
+        return result;
+    }
+    
+    // 处理断言 assert 语句
+    replaceAssert = function(line) {        
+        var result = line;
+        // TODO: 模式串有bug, 无法正确处理 assert( a > '', 'xx') 这种判断子句和错误信息都使用相同引号的情况,
+        // 		故需手工修改一下, 但不影响使用
         var pattern = `!\w(assert)\s+([^,\r\n]*)\s*([\,]*)\s*((['"]*)(.*?)(\5))`;
         result = string.replace(result, pattern, function($1, $2, $3, $4, $5, $6) {
             var res = $1 ++ '(' ++ $2;
@@ -283,7 +309,7 @@ class converter {
     
     // 处理 except 和 finally 子句
     replaceExceptFinally = function(line, i) {
-        /**行内的字符串文本已经预先加密, 不用担心会在字符串中匹配到关键字的情况**/
+        /**行内的字符串文本已经预先加密, 不用担心会在字符串中匹配到保留字的情况**/
         var pattern = `^( *)(<except>|<finally>)\s*([\(\)\w\,\.\s]*?)\s*(\:)`;
         var found = false
         var result = string.replace(line, pattern, function($1, $2, $3, $4) {
