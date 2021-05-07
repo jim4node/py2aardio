@@ -44,6 +44,7 @@ class converter {
         //result = this.encodeStrLiterals(result, true);	// 字符串加密不能用在这里, 会错乱
         /*
         1. 写成多行的注释,列表[],元组(),字典{}和函数参数()
+        //TODO: 断行有点小问题, 主要是在多重括号嵌套的时候
         */
         var patterns = {
         	`(<'''>|<""">)([\s\S]+?)(\1)`,	//以三个引号括住的多行注释
@@ -84,8 +85,7 @@ class converter {
         };
         for(n, ptn in patterns) {
         	result = string.replace(result, ptn, function($1, $2, $3){
-        		//console.debug('prepare:#3. $1="'++$1++'", $2="'++$2++'", $3="'++$3++'"');
-        		// $1, $2, $3 三个匹配映射, 有对上号的就执行
+        		// $1, $2, $3 三个匹配映射, 有一个对上号就行
         		var $1map = {};
         		var fn = $1map[$1];
         		if (fn) {
@@ -201,16 +201,21 @@ class converter {
         		newLine = this.replaceLambda(newLine);
         		// 处理 except 和 finally 子句
         		newLine = this.replaceExceptFinally(newLine, i);
+        		//TODO: 处理 del
+        		//newLine = this.replaceDel(newLine);
         		// 处理 转换 self->this, except->catch 之类的其它保留字
         		newLine = this.replaceReservedWords(newLine);
         		// 处理 Unicode 字符串格式 u"..." 和 raw string r"..."
         		newLine = this.replaceUnicodeStr(newLine);
         		// 处理 字符串格式化 '...' % (...)
         		newLine = this.replaceStrFormat(newLine);
+        		// 处理 assert
+        		newLine = this.replaceAssert(newLine);
         		// TODO: 处理列表推导式: [x for x in range(10) if x % 2 == 0 else...]
         		//newLine = this.replaceListComprehension(newLine);
         		// TODO: 处理列表的 hasattr, getattr, setattr 等 attr 函数
         		//newLine = this.replaceAttrFunc(newLine);
+
         	}
         	// 处理缩进, 附加返回newIndent-新的缩进, brackets-附加的花括号内容
         	newLine, prevIndent, brackets = this.replaceIndents(i, newLine, prevIndent, emptyLine);
@@ -236,6 +241,27 @@ class converter {
        	result = string.join(newLines, '\r\n');
     	return result, err;
     }
+    
+    // 处理断言
+    replaceAssert = function(line) {
+        
+        var result = line;
+        // TODO: 模式有bug, 无法正确处理 assert( a > '', 'xx') 这种判断子句和错误信息都使用相同引号的情况
+        // 需要手工修改, 但不影响使用
+        var pattern = `!\w(assert)\s+([^,\r\n]*)\s*([\,]*)\s*((['"]*)(.*?)(\5))`;
+        result = string.replace(result, pattern, function($1, $2, $3, $4, $5, $6) {
+            var res = $1 ++ '(' ++ $2;
+            if ($3 > '') {	// 若有错误信息
+            	res = res ++ $3 ++ ' ' ++ $4;
+            } else {
+                res = res ++ ', ""';
+            }
+            res = res ++ ')';
+            return res;                
+        });
+        
+        return result;
+    }
 
     // 处理列表声明 '[...]'
     replaceList = function(line) {
@@ -258,7 +284,7 @@ class converter {
     // 处理 except 和 finally 子句
     replaceExceptFinally = function(line, i) {
         /**行内的字符串文本已经预先加密, 不用担心会在字符串中匹配到关键字的情况**/
-        var pattern = `^( *)(<except>|<finally>)\s*([\(\)\w\s]*?)\s*(\:)`;
+        var pattern = `^( *)(<except>|<finally>)\s*([\(\)\w\,\.\s]*?)\s*(\:)`;
         var found = false
         var result = string.replace(line, pattern, function($1, $2, $3, $4) {
             //owner = 原始字符串
@@ -272,7 +298,7 @@ class converter {
             	if(#$3 == 0) {
             		res = $2 ++ '(e)';
             	} else {
-                	res = $2 ++ string.replace($3, `(\w+\s+as\s+)`, `/*\1*/`); //若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
+                	res = $2 ++ string.replace($3, `(.+?\s+as\s+)`, `/*\1*/`); //若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
                 }
                 //console.debug('#line:'++i++', #3: res="'++res++'"');
             }

@@ -11,6 +11,9 @@ class people:
     __weight = 0
     #定义构造方法
     def __init__(self,n,a,w):
+        assert a > 0, "年龄不能是负数"
+        assert n > '', '姓名不能为空'
+        assert w > 0
         self.name = n
         self.age = a
         self.__weight = w
@@ -23,6 +26,7 @@ class student(people):
     def __init__(self,n,a,w,g):
         #调用父类的构函
         people.__init__(self,n,a,w)
+        assert g > 0
         self.grade = g  # 子类的新增成员: 年级
     #覆写父类的方法
     def speak(self):

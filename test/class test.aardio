@@ -11,6 +11,9 @@ class people {
     __weight = 0;
     //定义构造方法
     ctor(n,a,w) {
+        assert(a > 0, "年龄不能是负数");
+        assert(n > '', '姓名不能为空', "");
+        assert(w > 0, "");
         this.name = n;
         this.age = a;
         this.__weight = w;
@@ -27,6 +30,7 @@ class student {
     ctor(n,a,w,g) {
         //调用父类的构函
         people.__init__(this,n,a,w);
+        assert(g > 0, "");
         this.grade = g  // 子类的新增成员: 年级;
     }
     //覆写父类的方法
