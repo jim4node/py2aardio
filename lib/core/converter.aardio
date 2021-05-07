@@ -8,7 +8,8 @@ class converter {
             trimRight = true;	//是否清除末尾的空白符
             indentSpaces = 4;	//缩进空格数
             addSemicolon = true;//行尾添加分号
-            camelize = true;	//变量名改为驼峰式
+            camelizeVar = true;	//变量名改为驼峰式
+            camelizeFile = true;//文件名改为驼峰式
         };
         $_config = ..table.assign($_config, cfg);	//用参数覆盖设置
     }
@@ -209,6 +210,8 @@ class converter {
         		newLine = this.replaceDel(newLine);
         		// 处理 assert 语句
         		newLine = this.replaceAssert(newLine);
+        		// 处理对象的 hasattr, getattr, setattr 等属性函数
+        		newLine = this.replaceAttrFunc(newLine);
         		// 处理 转换 self->this, except->catch 之类的其它保留字
         		newLine = this.replaceReservedWords(newLine);
         		// 处理 Unicode 字符串格式 u"..." 和 raw string r"..."
@@ -216,9 +219,7 @@ class converter {
         		// 处理 字符串格式化 '...' % (...)
         		newLine = this.replaceStrFormat(newLine);
         		// TODO: 处理列表推导式: [x for x in range(10) if x % 2 == 0 else...]
-        		//newLine = this.replaceListComprehension(newLine);
-        		// TODO: 处理列表的 hasattr, getattr, setattr 等 attr 函数
-        		//newLine = this.replaceAttrFunc(newLine);
+        		//newLine = this.replaceListComprehension(newLine);        		
         	}
         	// 处理缩进, 附加返回newIndent-新的缩进, brackets-附加的花括号内容
         	newLine, prevIndent, brackets = this.replaceIndents(i, newLine, prevIndent, emptyLine);
@@ -245,6 +246,53 @@ class converter {
        	newLines = ..table.concat(newLines, this.eofIndents(prevIndent));
        	result = string.join(newLines, '\r\n');
     	return result, err;
+    }
+    
+    // 处理对象的 hasattr, getattr, setattr 等属性函数
+    replaceAttrFunc = function(line) {
+        var result = line;
+        /* 	4种情况:
+        	hasattr(object, name)
+        	getattr(object, name)
+        	getattr(object, name, default)
+        	setattr(object, name, values)
+        */
+        var pattern = `!\w(<has>|<set>|<get>)attr\s*\(\s*(.+?)\s*,\s*([^\r\n]+?)\s*\)`;
+        result = string.replace(result, pattern, function($1, $2, $3) {
+            //console.debug('replaceAttrFunc: $1="'++$1++'attr", $2="'++$2++'", $3="'++$3++'"');
+            var res = $2 ++ '[';
+            select($1) {
+            	case 'has' {
+            		res = res ++ $3 ++ ']';	// "hasattr(object, name)" => "object[name]"
+            	}
+            	case 'get' {
+            		// getattr(object, name);   	getattr(object, name, default)
+            		var i = string.indexOf($3, ',');
+            		var name = $3;
+            		var default = '';
+            		if (i) { // 若有默认值, 则拆分出属性名和默认值
+            			name = string.slice($3, 1, i-1);	//逗号前的是属性名
+            			default = ' or ' ++ string.slice($3, i+1);//逗号后的是默认值
+            			// "getattr(object, name, default)" => "object[name] or default"
+            		}
+            		res = res ++ name ++ ']' ++ default;
+            	}
+            	case 'set' {
+            		//"setattr(object, name, value)" => "object[name] = value"
+            		var i = string.indexOf($3, ',');
+            		var name = $3;
+            		var value = '';
+            		if (i) { // 若有值, 则拆分出属性名和值
+            			name = string.slice($3, 1, i-1);//逗号前的是属性名
+            			value = string.slice($3, i+1);	//逗号后的是值
+            		}
+            		res = res ++ name ++ '] = ' ++ value;
+            	}
+            }//select
+            return res;
+        });
+        //console.debug('replaceAttrFunc: result="'++result++'"');
+        return result;
     }
     
     // 去除行尾的注释
@@ -482,8 +530,8 @@ class converter {
     replaceEntirety = function(src) {
         var result;
         // 变量命名驼峰化
-        if($_config.camelize) {
-        	src = this.camelize(src);
+        if($_config.camelizeVar) {
+        	src = this.camelizeVariants(src);
         }
         // 处理导入
         src = this.replaceImports(src);
@@ -585,7 +633,7 @@ class converter {
     }
     
     // 替换变量命名方式
-    camelize = function(src) {
+    camelizeVariants = function(src) {
         var pattern = `([a-z\d\$])_([a-z])`; //以下划线'_'连接的小写字母变量名
         var result = string.replace(src, pattern, function($1, $2) {
             //owner = 原始字符串

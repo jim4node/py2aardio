@@ -88,7 +88,7 @@ class student {
     ctor(n,a,w,g) {
         //调用父类的构函
         people.__init__(this,n,a,w);
-        this.grade = g  // 子类的新增成员: 年级;
+        this.grade = g;  // 子类的新增成员: 年级
     }
     //覆写父类的方法
     speak = function() {
@@ -129,6 +129,8 @@ if (owner == null) {
 9. 2021-05-07 v1.6.1 新增: 保留字 print 和导入别名(import as)
 10. 2021-05-07 v1.6.2 新增: 转换保留字 assert
 11. 2021-05-07 v1.6.3 新增: 行尾注释先去除再恢复; 新增转换保留字 del; 修复若干 bugs
+12. 2021-05-07 v1.6.4 新增: 转换对象属性相关方法 hasattr, getattr, setattr; 界面上增加"文件名改驼峰式"
+
 
 ### TODO 待办事宜
 1. Python 语言的列表推导式转换

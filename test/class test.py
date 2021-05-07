@@ -54,5 +54,13 @@ if __name__ == "__main__":
     """
     s = student('Ken', 10, 60, 3)
     s.speak()
+    # 测试 getattr, setattr, hasattr
+    n = getattr(s, 'name')  # 不带默认属性
+    n = getattr(s, 'name', 'default')  # 带默认属性
+    n = getattr(s, 'name', '(test)')   # 带默认属性
+    getattr(s, "age", setattr(s, "age", 18)) # 若age属性不存在，则设置该属性
+    ag = 'age'
+    if hasattr(s, ag):
+        setattr(s, ag, 20)
     
     print("main module end")

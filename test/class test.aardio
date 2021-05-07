@@ -63,6 +63,16 @@ if (owner == null) {
     */
     s = student('Ken', 10, 60, 3);
     s.speak();
+    // 测试 getattr, setattr, hasattr
+    n = s['name'];  // 不带默认属性
+    n = s['name'] or  'default';  // 带默认属性
+    n = s['name'] or  '(test)';   // 带默认属性
+    s["age"] or  setattr(s, "age", 18); // 若age属性不存在，则设置该属性
+    ag = 'age';
+    if (s[ag]) {
+        s[ag] =  20;
+    }
+
 
     console.log("main module end");
 }
