@@ -131,6 +131,20 @@ var copyFile = function(fileFullName, cfg) {
 	}
 }
 
+// 文件名驼峰化
+var camelizeFilename = function(fileFullName) {
+    var result = fileFullName;
+    var path = fsys.getParentDir(result);
+    var fname = fsys.getFileName(result);
+    var pattern = `([a-z\d\$])_([a-z])`; //以下划线'_'连接的小写字母文件名
+    fname = string.replace(fname, pattern, function($1, $2) {
+        //owner = 原始字符串
+        return $1 ++ string.upper($2); // file_name.ext -> fileName.ext
+    });
+    result = path ++ fname;
+    //console.debug('camelizeFilename: result='++ result);
+    return result;
+}
 
 var listener = thread.command();
 listener.addSourceItem = function(sourceType, item) {
@@ -172,7 +186,16 @@ mainForm.btnStart.oncommand = function(id, event) {
 
     if (sourceType == 'file') {
         thread.command.send('addSourceItem', 'file', srcPath);
+        var ext = fsys.getExtensionName(srcPath);
+        if(ext != 'py') {
+        	var answer = mainForm.msgboxTest('该文件(*.'++ext++')不是 python 源文件, 是否继续?');
+        	if(answer != true)
+        		return;
+       	}
         cfg.targetFile = getTargetFullName(srcPath); // 通过cfg传入目标文件完全路径
+        if(cfg.camelizeFile) {
+            cfg.targetFile = camelizeFilename(cfg.targetFile);
+        }
         convertSingleFile(srcPath, cfg); // 转换单个文件
     }
     elseif(sourceType == 'dir') {
@@ -181,20 +204,22 @@ mainForm.btnStart.oncommand = function(id, event) {
         fsys.enum(srcPath/*要遍历的目录*/, "*.*"/*指定查询文件名,支持windows掩码*/, function(dir, filename, fileFullName, findData) { //指定触发器
             if (filename) { //若是文件
             	var ext = fsys.getExtensionName(filename);
-            	console.log("src file：" ++ fileFullName);
+            	//console.debug("src file：" ++ fileFullName);
             	if (ext == 'py') { // 若是 py 文件 则转换格式
-            		//console.debug(fileFullName);
             		count++;
-                	//console.log("文件："++filename, ', dir='++dir, ',fileFullName='++fileFullName);
+                	//console.debug("文件："++filename, ', dir='++dir, ',fileFullName='++fileFullName);
                 	thread.command.send('addSourceItem', 'file', fileFullName);
-                	cfg.targetFile = getTargetFullName(fileFullName); // 通过cfg传入目标文件完全路径
+                	cfg.targetFile = getTargetFullName(fileFullName); // 通过cfg 将目标文件路径传入线程
+                	if(cfg.camelizeFile) {
+            			cfg.targetFile = camelizeFilename(cfg.targetFile);
+        			}
                 	thread.invoke(convertFn, dir, filename, fileFullName, cfg);
                 } 
                 elseif (cfg.copyOthers) {	// 否则,若需复制目录内的其它文件(用于整个工程的整体性转换)
                 	//console.debug(fileFullName);
                 	count++;
                 	thread.command.send('addSourceItem', 'file', fileFullName);
-                	cfg.targetFile = getTargetFullName(fileFullName, false); // 通过cfg传入目标文件完全路径(false=不修改扩展名)
+                	cfg.targetFile = getTargetFullName(fileFullName, false); // 通过cfg 将目标文件路径传入线程(false=不修改扩展名)
                     thread.invoke(copyFile, fileFullName, cfg);
                 }
             }
