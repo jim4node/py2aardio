@@ -73,6 +73,5 @@ if (owner == null) {
         s[ag] =  20;
     }
 
-
     console.log("main module end");
 }
