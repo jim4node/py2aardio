@@ -300,7 +300,7 @@ class converter {
         var result = line;
         var comment = '';
         /* 行内的字符串已被加密, 一般不必担心会参与匹配 */
-        var pattern = `\s*(<\#>|<\/\*>|<\/\/>)(.*?)([^\r\n]+)`;	// 即考虑python 原生注释'#' , 也考虑可能预先已被替换过的注释
+        var pattern = `\s*(<#>|</\*>|<//>)[^\r\n]*`;	// 即考虑python 原生注释'#' , 也考虑可能预先已被替换过的注释
         var b, e = string.find(result, pattern);
         if (b) {	// 若找到, 则截断, 并取出注释内容
             comment = string.slice(result, b, e);
