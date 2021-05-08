@@ -82,7 +82,7 @@ detectGfResult = function(imagePath) {
     import PIL; var ImageFilter, Image = PIL.ImageFilter, PIL.Image;
 
     img = Image.open(imagePath);
-    if (hasattr(img, "width")) {
+    if (img["width"]) {
         width, height = img.width, img.height;
     } else {
         width, height = img.size;
