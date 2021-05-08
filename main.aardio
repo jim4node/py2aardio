@@ -3,6 +3,7 @@ import win.ui.menu;
 import win.dlg.message;
 import fsys;
 import fsys.dlg;
+import fsys.dlg.dir;//仅支持WIN7以后版本,XP上自动降级为fsys.dlg.opendir
 /*DSG{{*/
 mainForm = win.form(text="Python2Aardio Conversion Helper";right=959;bottom=591;acceptfiles=1;maximize=1)
 mainForm.add(
@@ -204,11 +205,7 @@ mainForm.btnStart.oncommand = function(id, event) {
         fsys.enum(srcPath/*要遍历的目录*/, "*.*"/*指定查询文件名,支持windows掩码*/, function(dir, filename, fileFullName, findData) { //指定触发器
             if (filename) { //若是文件
             	var ext = fsys.getExtensionName(filename);
-<<<<<<< HEAD
-            	console.log("src file：" ++ fileFullName);
-=======
             	//console.debug("src file：" ++ fileFullName);
->>>>>>> df0168b2cd395e2ff656a45e52f6a76c97bb2715
             	if (ext == 'py') { // 若是 py 文件 则转换格式
             		count++;
                 	//console.debug("文件："++filename, ', dir='++dir, ',fileFullName='++fileFullName);
@@ -293,7 +290,7 @@ var miSelSrcFolderClick = function(id) {
     if (sourceType == 'file') {
         initDir = fsys.getParentDir(initDir);
     }
-    var pathfile = fsys.dlg.opendir(initDir, mainForm);
+    var pathfile = fsys.dlg.dir(initDir, mainForm);//新版打开目录对话框(旧版为opendir)
     if (pathfile) {
         sourceType = 'dir';
         mainForm.edtSourcePath.text = pathfile;
@@ -312,7 +309,7 @@ var miSelTargetOtherFolderClick = function(id) {
     if (sourceType == 'file') {
         initDir = fsys.getParentDir(initDir);
     }
-    var path = fsys.dlg.opendir(initDir, mainForm);
+    var path = fsys.dlg.dir(initDir, mainForm);//新版打开目录对话框(旧版为opendir)
     if (path) {
         mainForm.edtTargetPath.text = path;
         targetRoot = path;
