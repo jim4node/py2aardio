@@ -424,7 +424,7 @@ class converter {
             var res = $1 ++ ' ' ++ $2;
             if($3 !== 'object') {	//若继承的父类
                 var parents = string.split($3, ',');
-            	res = res ++ ' {\r\n' ++ core.pad($_config.indentSpaces) ++ 'this = ' ++ parents[1] ++ '(...);';
+            	res = res ++ ' {\r\n' ++ string.repeat($_config.indentSpaces, ' ') ++ 'this = ' ++ parents[1] ++ '(...);';
             	res = res ++ '// 继承的父类 <--请把这行移入类的构造函数 ctor 内!';
             	if(#parents > 1) {
             		//TODO: 要处理继承多个父类的情况, 逗号分隔的
@@ -511,13 +511,13 @@ class converter {
         } else {
         	if(newIndent > prevIndent) {
             	dir = 'increase';	// 缩进增加, 需补充'{'
-            	brackets = core.pad(prevIndent) ++ '{';
+            	brackets = string.repeat(prevIndent, ' ') ++ '{';
         	} elseif (newIndent < prevIndent) {
         		dir = 'decrease';	// 缩进减少, 需补充'}'(可能有多级)
         		var lines = {};
         		for(l = -1; level; -1) {	//回缩时的 level 是负值
         			var spaces = prevIndent + l * $_config.indentSpaces;
-        			..table.push(lines, core.pad(spaces) ++ '}');
+        			..table.push(lines, string.repeat(spaces, ' ') ++ '}');
         		}
         		brackets = string.join(lines, '\r\n');
         	}
@@ -576,8 +576,7 @@ class converter {
         if(indent > 0) {
             var step = -1 * $_config.indentSpaces;
             for(i = indent - $_config.indentSpaces; 0; step) {
-                var spaces = i;
-        		var str = core.pad(spaces) ++ '}';
+                var str = string.repeat(i, ' ') ++ '}';
                 ..table.push(result, str);
             }
         }
