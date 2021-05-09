@@ -36,7 +36,7 @@ import core.converter;
 import thread.command;
 var sourceType = 'file';
 var sourceCount, targetCount = 0, 0;	//源文件和目标文件的数量
-
+var sourcesFinished = false;	//源文件是否全部发送完毕, 用于指示进度结束
 var sourceRoot = ''; //源文件的根目录
 var targetRoot = ''; //目标文件的根目录
 
@@ -87,6 +87,7 @@ var convertSingleFile = function(fileFullName, cfg) {
                 //TODO: command listener 'log'
                 thread.command.send('log', '[Error]conversion error:'++err++', file: '++fileFullName);
             }
+            thread.command.send('targetFinished', cfg.targetFile);
         } else {
             //TODO: command listener 'log'
             thread.command.send('log', '[Warn]Empty source file: '++fileFullName);
@@ -115,6 +116,7 @@ var convertFn = function(dir, tagname, fileFullName, cfg) {
         } else {
             thread.command.send('log', '[Warn]Empty source file: '++fileFullName);
         }
+        thread.command.send('targetFinished', cfg.targetFile);
     }
 };
 
@@ -132,7 +134,8 @@ var copyFile = function(fileFullName, cfg) {
 			thread.command.send('log', '[Info]successfully copied file: ' ++ fileFullName);
 		} else {
 			thread.command.send('log', '[Error]copy file error' ++ ', file='++fileFullName);
-		} 
+		}
+		thread.command.send('targetFinished', cfg.targetFile);
 	}
 }
 
@@ -150,7 +153,7 @@ var camelizeFilename = function(fileFullName) {
     //console.debug('camelizeFilename: result='++ result);
     return result;
 }
-
+//线程命令
 var listener = thread.command();
 listener.addSourceItem = function(sourceType, item) {
     sourceCount++;
@@ -160,10 +163,21 @@ listener.addSourceItem = function(sourceType, item) {
 listener.addTargetItem = function(sourceType, item) {
     targetCount++;
     mainForm.lbTarget.add(item);
-    // 显示进度
-    mainForm.lblPrgFile.text = item;
-    mainForm.lblPrgNum.text = '' ++ sourceCount ++ ' / ' ++ targetCount;
 };
+
+listener.sourcesFinished = function(count) {
+    // 所有源文件已经发送完毕
+    sourcesFinished = true;
+};
+
+listener.targetFinished = function(fileName) {
+    // 单个目标文件已经转换结束
+	// 显示进度
+    mainForm.lblPrgFile.text = fileName;
+    var finished = sourcesFinished and sourceCount == targetCount;
+    mainForm.lblPrgNum.text = sourceCount ++ (sourcesFinished ? ' (完毕)' : '') ++ ' / ' ++ targetCount ++ (finished ? ' (完毕)' : '');
+
+}
 
 listener.log = function(logLevel, str) {
     //TODO: log 输出
@@ -199,6 +213,7 @@ mainForm.btnStart.oncommand = function(id, event) {
     };
 	
 	sourceCount = 0; targetCount = 0;	// 复位源/目标文件计数
+	sourcesFinished = false;
 	
     if (sourceType == 'file') {
         thread.command.send('addSourceItem', 'file', srcPath);
@@ -245,6 +260,7 @@ mainForm.btnStart.oncommand = function(id, event) {
 			}
 			*/
         }, mainForm.cbSubDir.checked == 1 /*是否递归子目录*/ ); //fsys.enum 
+        thread.command.send('sourcesFinished', count);	// 发送[所有源文件已发送完毕]的消息, 等待所有子线程异步结束
         if (count == 0) {
             thread.command.send('log', '[Warn]no python file found');
             mainForm.msgWarn('未发现有效的 python 文件');
