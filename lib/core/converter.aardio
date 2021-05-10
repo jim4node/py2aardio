@@ -646,7 +646,13 @@ class converter {
         var pattern = `!\wfrom\s+([\w\.]+)\s+import\s+([^\r;\:]+)`;
         var result = string.replace(src, pattern, function($1, $2){
             var res = 'import ' ++ $1 ++ ';' //'import a.b;
-            if($2 != '*') {
+            if(string.startWith($1, '.')) { // 几个点号表示的相对路径, 从.(当前)/..(上级)/...(上上级)目录导入
+                //from . import a; from .. import b; from ... import c;
+                //form .A import a => import /*./A*/a;
+                //var i = string.lastIndexOf($1, '.'); var path = string.slice($1, 1, i) ++ '/' ++ string.slice($1, i+1);
+                res = 'import ' ++ $2 ++ '; /* from ' ++ $1 + '*/';	// 把相对路径移到注释
+            }
+            elseif($2 != '*') {
             	// 分析多个导入变量, 转换成: var a, b = xx.a, xx.b;
             	var list = string.split($2, ',');
             	var vars = {};

@@ -269,6 +269,7 @@ mainForm.btnStart.oncommand = function(id, event) {
 }
 
 import console;
+//console.debug(io._exedir/*路径*/, io._exefile/*文件名*/, io._exepath/*路径+文件名*/);
 mainForm.edtSourceCode.wndproc = function(hwnd, message, wParam, lParam) {
     select(message) {
         case 0x115 /*_WM_VSCROLL*/ {
