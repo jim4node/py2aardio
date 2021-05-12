@@ -95,7 +95,7 @@ runWhenStrategyNotHold = function(func) {
         // 不带 as 的异常
         console.log(e);
         // pass;
-    } catch/*(Exception as */e) {
+    } catch(/*Exception as */e) {
         // 带 as 的异常
         console.log('Exception error');
     }
@@ -124,7 +124,7 @@ funTry = function() {
         console.log 'normal except';
     } catch(Exception) {
         console.log 'Exception';
-    } catch/*(ValueError as */e) {
+    } catch(/*ValueError as */e) {
         console.log('ValueError');
     }
     /*finally*/ {

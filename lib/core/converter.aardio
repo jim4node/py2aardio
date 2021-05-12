@@ -156,7 +156,7 @@ class converter {
     }
     
     // 打印出语句中的关键词
-    getKeywords = function(line) {
+    getReservedWords = function(line) {
         // python 和 aardio 的保留字都算, !pattern 是边界断言, `!\w(xxx)\W` 表示以单词字母开始,且以非单词字符结束
         var pattern = `!\w(<and>|<as>|<assert>|<begin>|<break>|<case>|<catch>|<class>|<continue>|<def>|<del>|<do>|<elif>|<elseif>|<else>|<end>|<except>|<finally>|<for>|<from>|<false>|<False>|<global>|<if>|<import>|<in>|<is>|<lambda>|<nonlocal>|<not>|<None>|<or>|<pass>|<print>|<raise>|<return>|<select>|<this>|<try>|<true>|<True>|<var>|<while>|<with>|<yield>)\W`;
         var list = {};
@@ -169,10 +169,9 @@ class converter {
     
     // 句尾加分号
     addSemicolon = function(line) {
-    	var keywords = this.getKeywords(line);
+    	var resrvWords = this.getReservedWords(line);
     	// 若第一个保留字不是这些语句, 则加上分号
-    	//TODO: 去掉注释, 找到真实的句尾
-        if(#keywords == 0 or !..table.find({'begin','def','class','while','function','for','if','else','elif','elseif','except','try','catch','finally','select','case','with'}, keywords[1])) 
+    	if(#resrvWords == 0 or !..table.find({'begin','def','class','while','function','for','if','else','elif','elseif','except','try','catch','finally','select','case','with'}, resrvWords[1])) 
         	line = line ++ ';';
        	return line;
     }
@@ -374,7 +373,7 @@ class converter {
             	if(#$3 == 0) {
             		res = $2 ++ '(e)';
             	} else {
-                	res = $2 ++ string.replace($3, `(.+?\s+as\s+)`, `/*\1*/`); //若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
+                	res = $2 ++ string.replace($3, `(\w+?\s+as\s+)`, `/*\1*/`); //若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
                 }
                 //console.debug('#line:'++i++', #3: res="'++res++'"');
             }
@@ -663,14 +662,13 @@ class converter {
             	for(i, v in list) {
             		v = string.replace(string.trim(v), '\x1a', '');	//trim时要考虑那个预先被替换掉的'\n'
             		if(#v == 0) continue;
-            		console.debug('v="'++v++'", len='++#v);
             		// 将 from (core.Events) import (Event as evt, EVENT2 as EVT) 转换为: 
-            		// import core.Events; var evt, EVT = core.Events.Event, core.Events.EVENT2
+            		// "import core.Events; var evt, EVT = core.Events.Event, core.Events.EVENT2"
             		var arr = string.splitEx(v, ` as `);
             		var arr1 = string.trim(arr[1]);
             		var name = arr1;
             		if(#arr == 2) { //若有别名
-            			name = string.trim(arr[2]);	// name使用别名            			
+            			name = string.trim(arr[2]);	// 则 name 使用别名            			
             		}
             		..table.push(names, name);
                 	..table.push(values, $1 ++ '.' ++ arr1); // 使用本名
@@ -679,7 +677,6 @@ class converter {
             		res = res ++ ' var ' ++ string.join(names, ', ') ++ ' = ' ++ string.join(values, ', ');
             	}
             }
-            //res = res ++ '\r\n';
             return res;
         });
         //2. import ... as ...
@@ -704,7 +701,7 @@ class converter {
             res = string.replace(res, `__del__\s*=\s*function\s*`, 'destructor');	//类的析构函数
             res = string.replace(res, `__str__\s*=\s*function\s*`, '_tostring');	//类的 tostring
             return res;
-        }); 
+        });
         return result;
     }
 }
