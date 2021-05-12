@@ -4,6 +4,7 @@ namespace core;
 class converter {
     ctor(src, cfg) {
         var $_src = src;
+        var $_tagName = '';
         var $_config = {		//默认设置
             trimRight = true;	//是否清除末尾的空白符
             indentSpaces = 4;	//缩进空格数
@@ -30,6 +31,7 @@ class converter {
     go = function(tag) {
         var result, err;
         var src = $_src;
+        $_tagName = tag;
         src = this.prepare(src);			//先进行多行并一行等准备工作
         //this.saveTo(src, tag++'.1.after_prepare.py');
         src = this.replaceByLines(src);		//再进行逐行性的替换
@@ -318,7 +320,7 @@ class converter {
     }
     
     // 处理断言 assert 语句
-    replaceAssert = function(line) {        
+    replaceAssert = function(line) {
         var result = line;
         // TODO: 模式串有bug, 无法正确处理 assert( a > '', 'xx') 这种判断子句和错误信息都使用相同引号的情况,
         // 		故需手工修改一下, 但不影响使用
@@ -408,7 +410,8 @@ class converter {
                 ['True'] = 'true',
                 ['False'] = 'false',
                 ['is not'] = '!=',		// 注:实际上 python 的 is/is not 与 ==/!= 含义有所不同: is 比较引用相等, 而 == 比较值相等;
-                ['is'] = '=='			// 但是 aardio 没有对应的操作符, 故暂且用 ==/!=
+                ['is'] = '==',			// 但是 aardio 没有对应的操作符, 故暂且用 ==/!=
+                //['__all__'] == '__all__/*module.exports*/', //这是 python 用于限制from <module> import * 导出成员的模块变量, 类似于 js 的 exports; aardio 无对应变量, 须手工处理
             };
             
             var $1m = map[$1];
@@ -640,10 +643,10 @@ class converter {
         });
         return result;
     }
-    // 替换导入 imports : 1.from...import, 2.import...as
+    // 替换导入 imports : 1.from...import, 2.import...as, 3.from ... import ... as ...
     replaceImports = function(src) {
-        //1. from...import...
-        var pattern = `!\wfrom\s+([\w\.]+)\s+import\s+([^\r;\:]+)`;
+        //1. from...import... // 3.from ... import ... as ...
+        var pattern = `!\wfrom\s+([\w\.]+)\s+import[\s\(]+([^\r;\:\)]+)[\s\)]*`;//[\w\.\ \,]
         var result = string.replace(src, pattern, function($1, $2){
             var res = 'import ' ++ $1 ++ ';' //'import a.b;
             if(string.startWith($1, '.')) { // 几个点号表示的相对路径, 从.(当前)/..(上级)/...(上上级)目录导入
@@ -653,14 +656,27 @@ class converter {
                 res = 'import ' ++ $2 ++ '; /* from ' ++ $1 + '*/';	// 把相对路径移到注释
             }
             elseif($2 != '*') {
-            	// 分析多个导入变量, 转换成: var a, b = xx.a, xx.b;
+                // 分析多个导入变量, 转换成: var a, b = xx.a, xx.b;
             	var list = string.split($2, ',');
-            	var vars = {};
+            	var names = {};	//导入的成员名或别名
+            	var values = {};	//导入的值名
             	for(i, v in list) {
-                	..table.push(vars, $1 ++ '.' ++ string.trim(v)); // xxx.v; 
-            	}
-            	if(#vars) {
-            		res = res ++ ' var ' ++ $2 ++ ' = ' ++ string.join(vars, ', ');
+            		v = string.replace(string.trim(v), '\x1a', '');	//trim时要考虑那个预先被替换掉的'\n'
+            		if(#v == 0) continue;
+            		console.debug('v="'++v++'", len='++#v);
+            		// 将 from (core.Events) import (Event as evt, EVENT2 as EVT) 转换为: 
+            		// import core.Events; var evt, EVT = core.Events.Event, core.Events.EVENT2
+            		var arr = string.splitEx(v, ` as `);
+            		var arr1 = string.trim(arr[1]);
+            		var name = arr1;
+            		if(#arr == 2) { //若有别名
+            			name = string.trim(arr[2]);	// name使用别名            			
+            		}
+            		..table.push(names, name);
+                	..table.push(values, $1 ++ '.' ++ arr1); // 使用本名
+                }
+            	if(#values) {
+            		res = res ++ ' var ' ++ string.join(names, ', ') ++ ' = ' ++ string.join(values, ', ');
             	}
             }
             //res = res ++ '\r\n';

@@ -36,6 +36,13 @@ do_some_thing(
 from functools import wraps
 from rq.core.events import EVENT, Event
 from rq.utils.logger import user_system_log
+from rq.core.events import Event as evt, EVENT as EVT   # 测试
+from rq.utils.exception import (
+    patch_user_exc,
+    patch_system_exc,
+    EXC_EXT_NAME,
+    InvalidArgument,
+)
 
 #---------父类 Test-----------#
 class Test(object):

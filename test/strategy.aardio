@@ -36,6 +36,8 @@ doSomeThing(
 import functools; var wraps = functools.wraps;
 import rq.core.events; var EVENT, Event = rq.core.events.EVENT, rq.core.events.Event;
 import rq.utils.logger; var userSystemLog = rq.utils.logger.userSystemLog;
+import rq.core.events; var evt, EVT = rq.core.events.Event, rq.core.events.EVENT;   // 测试
+import rq.utils.exception; var patchUserExc, patchSystemExc, EXC_EXT_NAME, InvalidArgument = rq.utils.exception.patchUserExc, rq.utils.exception.patchSystemExc, rq.utils.exception.EXC_EXT_NAME, rq.utils.exception.InvalidArgument;
 
 //---------父类 Test-----------#
 class Test {
