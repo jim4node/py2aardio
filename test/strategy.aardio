@@ -26,6 +26,16 @@ dict = {
     'lily': 'girl'
 };
 
+// 测试u字符串和多行字符串
+a = ("1...2...3...");
+b = ('a...b...c...');
+
+c = ("c1...c2...c3...");
+d = ('d1...d2...d3...');
+console.log(_("1.There is no data between {startDate} and {endDate}. Please check your data bundle or select other date period.").format(
+                    startDate, endDate));
+console.log(('2.There is no data between {startDate} and {endDate}. Please check your data bundle or select other date period.').format(s, e));
+
 // 函数的参数写成多行
 doSomeThing(
     p1='a',
