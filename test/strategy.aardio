@@ -35,6 +35,8 @@ d = ('d1...d2...d3...');
 console.log(_("1.There is no data between {startDate} and {endDate}. Please check your data bundle or select other date period.").format(
                     startDate, endDate));
 console.log(('2.There is no data between {startDate} and {endDate}. Please check your data bundle or select other date period.').format(s, e));
+// 测试字符串重复拼接
+s = string.repeat(10,"a");
 
 // 函数的参数写成多行
 doSomeThing(

@@ -45,7 +45,9 @@ print(_(u"1.There is no data between {start_date} and {end_date}. Please check y
                     start_date, end_date))
 print(('2.There is no data between {start_date} and {end_date}. Please check your'
                   ' data bundle or select other date period.').format(s, e))
-
+# 测试字符串重复拼接
+s = "a" * 10
+ 
 # 函数的参数写成多行
 do_some_thing(
     p1='a',

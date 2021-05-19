@@ -479,6 +479,9 @@ class converter {
             //$1-引号, $2-引号内的字符串, $3-'%'或format, $4-格式化参数 
             return `string.format(`++$1++$2++$1++`, `++$4m++`)`;
         });
+        // 处理字符串重复拼接: "a" * 10 (即10个a)
+        pattern = `((['"])[^'"]+\2)\s*\*\s*(\w+)`;
+        result = string.replace(result, pattern, `string.repeat(\3,\1)`);
         return result;
     }
         
