@@ -46,7 +46,7 @@ class converter {
         var result = src;
         //result = this.encodeStrLiterals(result, true);	// 字符串加密不能用在这里, 会错乱
         /*
-        1. 写成多行的注释,列表[],元组(),字典{}和函数参数()
+        1. 写成多行的注释,列表[],元组(),字典{},函数参数(),条件判断语句等
         //TODO: 断行有点小问题, 主要是在多重括号嵌套的时候
         */
         var patterns = {
@@ -55,11 +55,23 @@ class converter {
         	`([\(])(\s[^\(\)]*?[\n][^\(\)]*?\s*)([\)])`,	//`([\(])(\s.*?[\n].*?\s*)([\)])`
         	`([\{])(\s.*?[\n].*?\s*)([\}])`,
         	`([\[])(\s.*?[\n].*?\s*)([\]])`,
+        	//可能被写成多行的冒号结尾语句: 以if/elif/while/for等保留字开头,以冒号结尾,中间得有换行符,且中间无冒号
+        	`!\w(<if>|<elif>|<while>|<for>|<def>|<class>|<except>|<catch>)([\s\(][^\:]+?[\n][^\:]+?)(\:)`,
         };
+        //var i = 1; // debug 用的计数器
         for(n, ptn in patterns) {
-        	// 将多行变成单行, 以防止被后续分割成多行参与到语法分析; 待处理结束后, 再转换回来
+        	// 将多行变成单行, 以防止被后续分割成多行参与到语法分析; 待处理结束后, 会再转换回来
         	result = string.replace(result, ptn, function($1, $2, $3) {
-        		//把多行注释内的回车换行(\x0D\x0A)替换为其它特殊字符: \x0a => \x1a (特殊字符SUB)
+        		/* 
+        		// debug 用的输出
+        		if(string.find($1,'!\w(<if>|<elif>|<while>|<for>|<def>|<class>|<except>)')) {
+        			..thread.lock('console');
+        			console.debug('#'+i, $1+$2+$3, '\r\n----=====================================================---');
+        			..thread.unlock('console');
+        			i++;
+        		}
+        		*/
+        		//把多行内的换行符('\x0A')替换为其它特殊字符: \x0a => \x1a (特殊字符SUB)
             	var str = $1 ++ string.replace($2, `\n`, '\x1a') ++ $3;
             	return str;
         	});
@@ -81,6 +93,7 @@ class converter {
         for(n, ptn in patterns) {
         	result = string.replace(result, ptn, `\1`);
         }
+        
         /*
         3. 其它可全局性替换的关键字句(指不太可能在一个文件的多行内出现的)
         */

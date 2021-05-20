@@ -74,12 +74,21 @@ class Test(object):
     # 不规范的注释缩进
 #----------------------
         self.b = 0
-        # -很长的语句,多行
-        if ((maxp-current_price)/current_price)*100>1 \
+        
+    def stock(self):
+        # -很长的语句,多行, 用反斜杠断行
+        if ((maxp-price)/price)*100>1 \
             or sum(hi['volume'])<0.5*hiday['volume'] \
-            or 100*(current_price-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2:
-            g.security.remove(stock)
-            
+            or 100*(price-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2:
+            remove(stock)
+        # 测试:很长的语句,写成多行, 不带反斜杠
+        if ((maxp-price)/price)*100>1 or
+            sum(hi['volume'])<0.5*hiday['volume'] or
+            100*(price-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2:
+            remove(stock)
+        elif sum(lo['volume'])>0.3*loday['volume'] or
+            100*(price-sum(lo['money'])/sum(lo['volume']))/loday['close']>3:
+            add(stock)
 
 #--------子类 ChildTest--------
 class ChildTest(Test):
