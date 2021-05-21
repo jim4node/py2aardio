@@ -67,7 +67,7 @@ from rq.utils.exception import (
 )
 
 #---------父类 Test-----------#
-class Test(object):
+class Test(object):     # 继承自object
     # 构造函数
     def __init__(self):
         self.a = 0
@@ -75,7 +75,7 @@ class Test(object):
 #----------------------
         self.b = 0
         
-    def stock(self):
+    def stock(self):    # 任意成员函数
         # -很长的语句,多行, 用反斜杠断行
         if ((maxp-price)/price)*100>1 \
             or sum(hi['volume'])<0.5*hiday['volume'] \
@@ -91,13 +91,13 @@ class Test(object):
             add(stock)
 
 #--------子类 ChildTest--------
-class ChildTest(Test):
-    def __init__(self):
+class ChildTest(Test):  # 继承自父类 Test
+    def __init__(self): # 构造函数
         self.b = 1
 
 #--------孙类 SubChildTest, 继承自多个类--------
-class SubChildTest(Test, ChildTest):
-    def __init__(self):
+class SubChildTest(Test, ChildTest): # 继承自两个父类
+    def __init__(self): # 构造函数
         self.c = 2
        self.d=4 # 不规范的缩进3
          self.e=5 # 不规则的缩进5
@@ -108,23 +108,21 @@ class SubChildTest(Test, ChildTest):
 # @param func
 # @return wrapper
 """
-def run_when_strategy_not_hold(func):
+def run_hold(func): # 独立测试函数
     # test begin 
-    if True:
+    if True:        # 仅供测试
         a = 1
-    elif False :
+    elif False :    # 并无意义
         a = 0
     else:
         a = 2
     
-    try:
+    try:            # 测试try...except
         a = 1 + w
-    except e:
-        # 不带 as 的异常
+    except e:       # 不带 as 的异常
         print(e)
         pass
-    except Exception as e:
-        # 带 as 的异常
+    except Exception as e:  # 带 as 的异常       
         print('Exception error')
     finally:
         print('ok')
@@ -139,7 +137,7 @@ def run_when_strategy_not_hold(func):
 
     return wrapper
 
-def fun_try():
+def fun_try():  # 测试用的函数
     try:
         print('try--start')
         a = 1/0
@@ -180,7 +178,7 @@ class Strategy(object):
             )
 
     @property
-    def user_context(self):
+    def user_context(self): # 属性方法
         return self._user_context
 
     def init(self):

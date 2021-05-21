@@ -556,8 +556,10 @@ class converter {
         src = this.replaceImports(src);
         // 处理函数
         src = this.replaceFunctions(src);
-        // 处理冒号的行
-        src = this.replaceColons(src);
+        // DEBUG
+        //this.saveTo(src, $_tagName+'.before_replaceColonBrankets.aardio');
+        // 处理冒号+左花括号的行
+        src = this.replaceColonBrankets(src);
         // 处理 else/catch 前的回车换行
         src = this.replaceElses(src);
         //src = this.encodeStrLiterals(src, false);
@@ -581,10 +583,14 @@ class converter {
         return result;
     }
     
-    // 处理":+\n+{"的情况: 去掉冒号':'和回车换行
-    replaceColons = function(src) {
+    // 处理"冒号+(可能有的注释)+回车换行+花括号{"的情况, 去掉冒号':'和回车换行
+    replaceColonBrankets = function(src) {
+        // 1. 冒号后无注释的情况
         var pattern = `([^'"])\s*\:\s+\{`;
         var result = string.replace(src, pattern, `\1 {`);
+        pattern = `\:(\s*//[^\r\n]*?)(\r\n)(\s*?\{[ \t]*\r\n)`;
+        // 2. 冒号后有单行注释的情况
+        result = string.replace(result, pattern, `\{\1\2`);	//\1-注释部分, \2-回车换行
         return result;
     }
 
