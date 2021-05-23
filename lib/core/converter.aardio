@@ -236,11 +236,11 @@ class converter {
         		// TODO: 处理列表推导式: [x for x in range(10) if x % 2 == 0 else...]
         		//newLine = this.replaceListComprehension(newLine);        		
         	}
-        	// 处理缩进, 附加返回newIndent-新的缩进, brackets-附加的花括号内容
-        	newLine, prevIndent, brackets = this.replaceIndents(i, newLine, prevIndent, emptyLine);
+        	// 处理缩进, 附加返回newIndent-新的缩进, braces-附加的花括号内容
+        	newLine, prevIndent, braces = this.replaceIndents(i, newLine, prevIndent, emptyLine);
         	//若有需要补充的花括号, 则先插入之
-        	if(brackets) {
-        		..table.insert(newLines, brackets, prevCodeLine);
+        	if(braces) {
+        		..table.insert(newLines, braces, prevCodeLine);
         	}
         	newLine = string.trimright(newLine);
         	// 句末加分号
@@ -498,14 +498,14 @@ class converter {
         return result;
     }
         
-    //替换缩进: 发现缩进量 newIndent, 缩进级数level, 是否空行empty, 新的行代码line, 以及附加的补充内容brackets
+    //替换缩进: 发现缩进量 newIndent, 缩进级数level, 是否空行empty, 新的行代码line, 以及附加的补充内容braces
     //若本行产生了缩进(increase), 则在本行前插入左括号"{"; 
     //若本行产生了回缩(decrease), 则在本行前插入右括号"}"
     replaceIndents = function(i, line, prevIndent, isEmptyLine) {
         var dir;			// 缩进的类型/方向: null=不缩进, increase-缩进, decrease-回缩
         var newIndent = prevIndent;	// 缩进的空格数目
         var level = 0; 		//表示缩进的级数, 4格为一级, 一般用在回缩时
-        var brackets;		//需补充的花括号
+        var braces;		//需补充的花括号
         var pattern = `^( *)`;	//仅限空格
         var spaces = string.match(line, pattern);	//左侧的空格数
         newIndent = #spaces;	//缩进的空格数目
@@ -530,7 +530,7 @@ class converter {
         } else {
         	if(newIndent > prevIndent) {
             	dir = 'increase';	// 缩进增加, 需补充'{'
-            	brackets = string.repeat(prevIndent, ' ') ++ '{';
+            	braces = string.repeat(prevIndent, ' ') ++ '{';
         	} elseif (newIndent < prevIndent) {
         		dir = 'decrease';	// 缩进减少, 需补充'}'(可能有多级)
         		var lines = {};
@@ -538,11 +538,11 @@ class converter {
         			var spaces = prevIndent + l * $_config.indentSpaces;
         			..table.push(lines, string.repeat(spaces, ' ') ++ '}');
         		}
-        		brackets = string.join(lines, '\r\n');
+        		braces = string.join(lines, '\r\n');
         	}
         }
-	    //line, newIndent, brackets-需补足的花括号
-        return line, newIndent, brackets;
+	    //line, newIndent, braces-需补足的花括号
+        return line, newIndent, braces;
     }
     
     // 整体性的替代
@@ -557,9 +557,9 @@ class converter {
         // 处理函数
         src = this.replaceFunctions(src);
         // DEBUG
-        //this.saveTo(src, $_tagName+'.before_replaceColonBrankets.aardio');
+        //this.saveTo(src, $_tagName+'.before_replaceColonBrace.aardio');
         // 处理冒号+左花括号的行
-        src = this.replaceColonBrankets(src);
+        src = this.replaceColonBrace(src);
         // 处理 else/catch 前的回车换行
         src = this.replaceElses(src);
         //src = this.encodeStrLiterals(src, false);
@@ -584,13 +584,13 @@ class converter {
     }
     
     // 处理"冒号+(可能有的注释)+回车换行+花括号{"的情况, 去掉冒号':'和回车换行
-    replaceColonBrankets = function(src) {
+    replaceColonBrace = function(src) {
         // 1. 冒号后无注释的情况
         var pattern = `([^'"])\s*\:\s+\{`;
         var result = string.replace(src, pattern, `\1 {`);
         pattern = `\:(\s*//[^\r\n]*?)(\r\n)(\s*?\{[ \t]*\r\n)`;
         // 2. 冒号后有单行注释的情况
-        result = string.replace(result, pattern, `\{\1\2`);	//\1-注释部分, \2-回车换行
+        result = string.replace(result, pattern, ` \{\1\2`);	//\1-注释部分, \2-回车换行
         return result;
     }
 
