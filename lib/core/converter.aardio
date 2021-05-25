@@ -453,8 +453,8 @@ class converter {
     }
     // 替换修饰符 @decorator , 注释掉
     replaceDecorator = function(line) {
-        var pattern = `^(\s+)(\@\w+)`;
-        var result = string.replace(line, pattern, `\1\/\/ \2`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
+        var pattern = `^(\s*)(\@\w+)`;
+        var result = string.replace(line, pattern, `\1\/\/\2`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
     // 替换 lambda 表达式
