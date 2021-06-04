@@ -54,7 +54,10 @@ do_some_thing(
     p2='b',
     p3='c'
 )
-
+# 测试部分函数替换
+sourceDir = os.path.join(os.path.dirname(__file__), "test")
+destPath = os.path.abspath(os.path.join(dir, "test"))
+        
 from functools import wraps
 from rq.core.events import EVENT, Event
 from rq.utils.logger import user_system_log
