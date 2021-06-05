@@ -346,7 +346,7 @@ class converter {
             if ($3 > '') {	// 若有错误信息
             	res = res ++ $3 ++ ' ' ++ $4;
             } else {
-                res = res ++ ', ""';
+                //res = res ++ ', ""';	//若无错误信息, 也不必再预定错误信息
             }
             res = res ++ ')';
             return res;                
@@ -500,26 +500,39 @@ class converter {
         // 同一个函数的不同表达, 要把长的写在前面, 如: os.path.isdir 和 path.isdir
         // map 不能用 key-value 形式, 因为 for in 时次序会打乱
         var map = {
-            {'os.makedirs', 'fsys.createDir'},
-            {'os.path.isdir', 'fsys.isDir'},
-            {'path.isdir', 'fsys.isDir'},
-            {'os.path.join', 'io.joinpath'},
-            {'path.join', 'io.joinpath'},
-            {'os.path.exists', 'io.exist'},
-            {'path.exists', 'io.exist'},
-            {'os.path.abspath', 'io.fullpath'},
-            {'path.abspath', 'io.fullpath'},
-            {'os.path.split', 'io.splitpath'},
-            {'path.split', 'io.splitpath'},
-            {'os.path.basename', 'fsys.getFileName'},
-            {'path.basename', 'fsys.getFileName'},
-            {'os.path.dirname', 'fsys.getParentDir'},
-            {'path.dirname', 'fsys.getParentDir'},
+            // 基本的模式替换
+            {'@os.makedirs', 'fsys.createDir'},	// @ 是禁用模式匹配
+            {'@os.path.isdir', 'fsys.isDir'},
+            {'@path.isdir', 'fsys.isDir'},
+            {'@os.path.join', 'io.joinpath'},
+            {'@path.join', 'io.joinpath'},
+            {'@os.path.exists', 'io.exist'},
+            {'@path.exists', 'io.exist'},
+            {'@os.path.abspath', 'io.fullpath'},
+            {'@path.abspath', 'io.fullpath'},
+            {'@os.path.split', 'io.splitpath'},
+            {'@path.split', 'io.splitpath'},
+            {'@os.path.basename', 'fsys.getFileName'},
+            {'@path.basename', 'fsys.getFileName'},
+            {'@os.path.dirname', 'fsys.getParentDir'},
+            {'@path.dirname', 'fsys.getParentDir'},
+            // 需要用函数处理的模式匹配
+            // isinstance(ab.cd, six.string_types) -> (type(ab.cd) == type.string)
+            {`(isinstance\s*\(\s*([\w\.]+)\s*,\s*([\w\.]+)\s*\))`, function($1, $2, $3) {
+                	var res = $1;
+                	if(string.indexOf($3, 'str')) {
+                		res = '(type(' + $2 + ') == type.string)';
+                	} elseif(string.indexOf($3, 'int')) {
+                		res = '(type(' + $2 + ') == type.number)';
+                	}
+                	return res;
+            	}
+            },
         };
         for(i=1; #map) {
             var pair = map[i];
-            var k, v = pair[1], pair[2];
-            result = string.replace(result, "@@" + k, v);
+            var ptn, v = pair[1], pair[2];
+            result = string.replace(result, ptn, v);
         }
         return result;
     }

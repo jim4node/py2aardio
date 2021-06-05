@@ -47,7 +47,11 @@ doSomeThing(
 // 测试部分函数替换
 sourceDir = io.joinpath(fsys.getParentDir(__file__), "test");
 destPath = io.fullpath(io.joinpath(dir, "test"));
+a = isinstance(obj, AClassType);
+b = (type(ids) == type.string);
+c = (type(num) == type.number);
 
+// 测试 import
 import functools; var wraps = functools.wraps;
 import rq.core.events; var EVENT, Event = rq.core.events.EVENT, rq.core.events.Event;
 import rq.utils.logger; var userSystemLog = rq.utils.logger.userSystemLog;

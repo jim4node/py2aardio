@@ -57,7 +57,11 @@ do_some_thing(
 # 测试部分函数替换
 sourceDir = os.path.join(os.path.dirname(__file__), "test")
 destPath = os.path.abspath(os.path.join(dir, "test"))
-        
+a = isinstance(obj, AClassType)
+b = isinstance(ids, six.string_types)
+c = isinstance(num, six.integer_types)
+
+# 测试 import
 from functools import wraps
 from rq.core.events import EVENT, Event
 from rq.utils.logger import user_system_log
