@@ -613,7 +613,7 @@ class converter {
         var pattern = `!\w(<if>|<with>|<elif>|<while>|<for>|<except>)[ ]+([^\r\n]+?)[ ]*([\:])`;	//此时还没处理掉冒号
         //var result = string.replace(line, pattern, `\1 (\2) :`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         var result = string.replace(line, pattern, function($1, $2, $3) {
-            ..console.debug($1, $2);
+            //..console.debug($1, $2);
             return $1 + ' (' + $2 + ') ' + $3;
         });
         return result;

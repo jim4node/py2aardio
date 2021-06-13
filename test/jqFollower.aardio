@@ -89,7 +89,7 @@ class JoinQuantFollower {
         }
     }
 
-    // @staticmethod;
+    //@staticmethod;
     extractStrategyId = function(strategyUrl) {
         return re.search("(?<=backtestId=)\w+", strategyUrl).group();
     }
@@ -110,7 +110,7 @@ class JoinQuantFollower {
         return transactions;
     }
 
-    // @staticmethod;
+    //@staticmethod;
     stockShuffleToPrefix = function(stock) {
         assert(#(stock) == 11), string.format("stock {} must like 123456.XSHG or 123456.XSHE", stock);
         code = stock[:6];
