@@ -610,7 +610,7 @@ class converter {
     
     // 处理以冒号结尾的 "if|for|while ... :" 的语句, 为语句体加上括号()
     replaceColonStmt = function(line) {
-        var pattern = `!\w(<if>|<with>|<elif>|<while>|<for>|<except>)\s+(.+?)\s*[\:]`;	//此时还没处理掉冒号
+        var pattern = `!\w(<if>|<with>|<elif>|<while>|<for>|<except>)[ ]+([^\r\n]+?)[ ]*[\:]`;	//此时还没处理掉冒号
         var result = string.replace(line, pattern, `\1 (\2) :`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
         return result;
     }
