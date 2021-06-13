@@ -56,7 +56,7 @@ class converter {
         	`([\{])(\s.*?[\n].*?\s*)([\}])`,
         	`([\[])(\s.*?[\n].*?\s*)([\]])`,
         	//可能被写成多行的冒号结尾语句: 以if/elif/while/for等保留字开头,以冒号结尾,中间得有换行符,且中间无冒号
-        	`!\w(<if>|<elif>|<while>|<for>|<def>|<class>|<except>|<catch>)([\s\(][^\:]+?[\n][^\:]+?)(\:)`,
+        	`^ *(<if>|<elif>|<while>|<for>|<def>|<class>|<except>|<catch>)([\s\(][^\:]+?[\n][^\:]+?)(\:)`,
         };
         //var i = 1; // debug 用的计数器
         for(n, ptn in patterns) {
@@ -610,8 +610,12 @@ class converter {
     
     // 处理以冒号结尾的 "if|for|while ... :" 的语句, 为语句体加上括号()
     replaceColonStmt = function(line) {
-        var pattern = `!\w(<if>|<with>|<elif>|<while>|<for>|<except>)[ ]+([^\r\n]+?)[ ]*[\:]`;	//此时还没处理掉冒号
-        var result = string.replace(line, pattern, `\1 (\2) :`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
+        var pattern = `!\w(<if>|<with>|<elif>|<while>|<for>|<except>)[ ]+([^\r\n]+?)[ ]*([\:])`;	//此时还没处理掉冒号
+        //var result = string.replace(line, pattern, `\1 (\2) :`);//若要用 \1 代表匹配,不能用单引号; 在单引号里 \1 代表ascii(0x1)
+        var result = string.replace(line, pattern, function($1, $2, $3) {
+            ..console.debug($1, $2);
+            return $1 + ' (' + $2 + ') ' + $3;
+        });
         return result;
     }
     // 处理 else/catch 前置换行(即: }\r\nelse )的情况

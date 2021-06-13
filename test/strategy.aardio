@@ -70,18 +70,18 @@ class Test {     // 继承自object
 
     stock = function() {    // 任意成员函数
         // -很长的语句,多行, 用反斜杠断行
-        if (((maxp-price)/price)*100>1 
-            or sum(hi['volume'])<0.5*hiday['volume'] 
-            or 100*(price-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2) {
+        if (((maxp-price)/price)*100>1 or sum(hi['volume'])<0.5*hiday['volume'] or 100*(price-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2) {
             remove(stock);
         }
         // 测试:很长的语句,写成多行, 不带反斜杠
-        if (((maxp-price)/price)*100>1 or
-            sum(hi['volume'])<0.5*hiday['volume'] or
-            100*(price-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2) {
+        if ((maxp-price)/price)*100>1 or
+        {
+            sum(hi['volume'])<0.5*hiday['volume'] or;
+            100*(price-sum(hi['money'])/sum(hi['volume']))/hiday['close']>2:;
             remove(stock);
-        } elseif (sum(lo['volume'])>0.3*loday['volume'] or
-            100*(price-sum(lo['money'])/sum(lo['volume']))/loday['close']>3) {
+        } elseif sum(lo['volume'])>0.3*loday['volume'] or
+        {
+            100*(price-sum(lo['money'])/sum(lo['volume']))/loday['close']>3:;
             add(stock);
         }
     }
@@ -122,6 +122,8 @@ runHold = function(func) { // 独立测试函数
     }
 
     try {            // 测试try...except
+        a = 1 + w;
+    } catch(e) {       // 不带 as 的异常
         console.log(e);
         // pass;
     } catch(/*Exception as */e) {  // 带 as 的异常
@@ -173,7 +175,7 @@ class Strategy {
         this._handleBar = scope.get(
             'handleBar', null
             );
-
+        this._pe = POS_EFFECT[d["posEffect"]] if d["posEffect"] else null;
         if (funcBeforeTrading != null and funcBeforeTrading.__code__.coArgcount > 1) {
             this._beforeTrading = lambda(context) funcBeforeTrading(context, null);
             userSystemLog.warn(_(string.format("deprecated parameter[barDict] in '%s' function.", 'beforeTrading')));

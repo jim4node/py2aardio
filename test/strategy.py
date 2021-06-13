@@ -170,7 +170,7 @@ class Strategy(object):
         self._handle_bar = scope.get(
             'handle_bar', None
             )
-
+        self._pe = POS_EFFECT[d["pos_effect"]] if d["pos_effect"] else None
         if func_before_trading is not None and func_before_trading.__code__.co_argcount > 1:
             self._before_trading = lambda context: func_before_trading(context, None)
             user_system_log.warn(_(u"deprecated parameter[bar_dict] in '%s' function." % ('before_trading')))
