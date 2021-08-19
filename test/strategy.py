@@ -101,6 +101,19 @@ class Test(object):     # 继承自object
 class ChildTest(Test):  # 继承自父类 Test
     def __init__(self): # 构造函数
         self.b = 1
+        self.prop1 = 'p'
+    @property
+    def varb(self):
+        """
+        只读属性b
+        """
+        return self.b
+    
+    @property
+    def prop1(self):
+        # 只读属性
+        
+        return self.prop1 + '(readOnly)'
 
 #--------孙类 SubChildTest, 继承自多个类--------
 class SubChildTest(Test, ChildTest): # 继承自两个父类

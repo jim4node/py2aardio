@@ -92,6 +92,25 @@ class ChildTest {
     this = Test(...);// 继承的父类 <--请把这行移入类的构造函数 ctor 内! {  // 继承自父类 Test
     ctor() { // 构造函数
         this.b = 1;
+        this.prop1 = 'p';
+    }
+    //@property;
+    varb = { // <-- 只读属性, 请移入 util.metaProperty 属性表里
+        _get = function() {
+            /*
+            只读属性b
+            */
+            return owner.b;
+        }
+    }
+
+    //@property;
+    prop1 = { // <-- 只读属性, 请移入 util.metaProperty 属性表里
+        _get = function() {
+            // 只读属性
+
+            return owner.prop1 + '(readOnly)';
+        }
     }
 }
 
@@ -193,8 +212,10 @@ class Strategy {
     }
 
     //@property;
-    userContext = function() { // 属性方法
-        return this._userContext;
+    userContext = { // <-- 只读属性, 请移入 util.metaProperty 属性表里
+        _get = function() {
+            return owner._userContext;
+        }
     }
 
     init = function() {

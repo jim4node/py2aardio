@@ -43,8 +43,11 @@ class converter {
     }
     // 进行多行并一行等准备工作
     prepare = function(src) {
-        var result = src;
         //result = this.encodeStrLiterals(result, true);	// 字符串加密不能用在这里, 会错乱
+        // 处理@property 只读属性
+        src = this.replaceProperties(src);
+        //this.saveTo(src, $_tagName+'.after_replaceProperties.py');
+        var result = src;
         /*
         1. 写成多行的注释,列表[],元组(),字典{},函数参数(),条件判断语句等
         //TODO: 断行有点小问题, 主要是在多重括号嵌套的时候
@@ -608,6 +611,31 @@ class converter {
         return result;
     }
     
+    // 处理 @property 装饰符定义的只读属性
+    replaceProperties = function(src) {
+        var pattern = `(\@property) *([\r\n]+)( +)def +([\w\$]+)([^\n]*?)([\r\n]+)([\s\S]*?)([\r\n]\3)[\@\w]?=`;
+        //模式结尾的'?='含义:向右预测式零宽断言，测试 pattern 项是否可匹配1次，但不消费任何字符宽度
+        var result = string.replace(src, pattern, function($1, $2, $3, $4, $5, $6, $7, $8) {
+            var crlf, indent, name, body = $2, $3, $4, $7;
+            var indentSize = #indent;	// 缩进的字节长度
+            var res = $1 ++ crlf ++ indent ++ name ++ ' =: # <-- 只读属性, 请移入 util.metaProperty 属性表里' ++ crlf;
+            var lines = string.split(body, '\n');
+            lines = ..table.map(lines, function(val,key){
+            	var spaces = string.match(val, `^( +)`);//行首的缩进
+            	if(#spaces > indentSize + 3) {//若缩进比第一行的大, 说明是在函数体内的
+            		val = string.replace(val, `self.`, "owner.");
+            	    val = '    ' ++ val;
+            	}
+            	return val;
+            });
+            body = string.join(lines, '\n');
+            body = indent ++ '    def _get():' + crlf ++ body;
+            res += body ++ $8;
+            return res;
+        });
+        return result;
+    }
+    
     // 处理以冒号结尾的 "if|for|while ... :" 的语句, 为语句体加上括号()
     replaceColonStmt = function(line) {
         var pattern = `!\w(<if>|<with>|<elif>|<while>|<for>|<except>)[ ]+([^\r\n]+?)[ ]*([\:])`;	//此时还没处理掉冒号
@@ -628,9 +656,9 @@ class converter {
     // 处理"冒号+(可能有的注释)+回车换行+花括号{"的情况, 去掉冒号':'和回车换行
     replaceColonBrace = function(src) {
         // 1. 冒号后无注释的情况
-        var pattern = `([^'"])\s*\:\s+\{`;
+        var pattern = `([^'"])\s*\:[\;\s]+\{`;
         var result = string.replace(src, pattern, `\1 {`);
-        pattern = `\:(\s*//[^\r\n]*?)(\r\n)(\s*?\{[ \t]*\r\n)`;
+        pattern = `\:[\;]*(\s*//[^\r\n]*?)(\r\n)(\s*?\{[ \t]*\r\n)`;
         // 2. 冒号后有单行注释的情况
         result = string.replace(result, pattern, ` \{\1\2`);	//\1-注释部分, \2-回车换行
         return result;
